@@ -37,7 +37,7 @@ while [ ${#} -gt 0 ]; do
 
             # Se crea una nueva pestaña del terminal para poder interactuar con el contenedor y, cuando finalice, poder seguir usando la pestaña.
             # No es nada portable porque depende del programa de terminal usado, pero suponemos que este script solo se va a usar en la VM de Alpine
-            xfce4-terminal --tab -e "ash -c 'docker container run --name vm${maquina} --hostname vm${maquina} -it busybox; exec ash'"
+            xfce4-terminal --tab -e "ash -c 'docker container run --name vm${maquina} --hostname vm${maquina} -it --cap-add=NET_ADMIN busybox; exec ash'"
 
             docker network disconnect bridge vm${maquina}
             pos=$(( pos + 1 ))

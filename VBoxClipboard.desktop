@@ -1,0 +1,5 @@
+[Desktop Entry]
+
+Type=Application
+Exec=sudo VBoxClient --clipboard
+Name=VBox Clipboard

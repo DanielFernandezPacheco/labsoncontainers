@@ -1,17 +1,30 @@
 #!/bin/sh
 
-# Uso: ./lanzarContainers.sh n_redes [<maquina:redes>]
+# Uso: ./lanzarContainers.sh n_redes [<nombre:imagen:redes>]
 
-# Problemas: 
-# 1. Como la creación del contenedor y la conexión a redes no se esperan entre sí, puede generar problemas. Por ejemplo, 
-# en esta versión del script los contenedores no se desconectan de bridge porque todavía no se han terminado de crear.
-# Si se utilizara una imagen que no estuviera ya pulleada, ni siquiera se conectaría a las redes especificadas debido a la demora.
-#
-# 2. Se podría modificar la sintaxis de tal forma que se especificara el contenedor que se quiere usar. 
-# Por ejemplo, busybox:1 crearía un contenedor de Busybox conectado a la red1.
-# 
-# 3. Los nombres de las máquinas son del estilo "vm<numero>". Se podría modificar
+# El contenedor se arranca en modo detached para poder saber cuándo termina de crearse y poder configurar las redes correctamente
+# Se añade la capacidad NET_ADMIN para poder configurar las interfaces de red
+# Es necesario pasar la variable de entorno DISPLAY para poder usar aplicaciones de interfaz gráfica
+# Se monta la carpeta en la que se ejecuta el comando para compartir archivos con el contenedor
+# Se monta el socket de X11 para poder usar aplicaciones de interfaz gráfica
+# La opción IPC es necesaria para la ejecución de GUI (se modificará en la siguiente versión)
 
+run_container() {
+    docker container run \
+        --name $nombre \
+        --hostname $nombre \
+        -d -it --cap-add=NET_ADMIN \
+        --env DISPLAY \
+        --mount type=bind,source="$(pwd)",target=/mnt/shared \
+        --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \
+        --ipc=host \
+        $imagen
+}
+
+error() {
+    echo "Error en la creación de los contenedores"
+    exit
+}
 
 # Primero eliminamos las redes si existen y luego se crean
 for i in $(seq 1 $1); do
@@ -27,26 +40,35 @@ while [ ${#} -gt 0 ]; do
     IFS=":"
 
     pos=1
-    maquina=''
+    nombre=''
 
     for x in $1; do
-        # Si se trata del primer elemento, se crea el contenedor. Si es el segundo, se trata de la parte de redes
+        # Se almacena el nombre del contenedor
         if [ $pos -eq 1 ]; then
-            maquina=$x # Se almacena el número de contenedor para luego usarlo a la hora de conectarlo a las redes
-            docker container rm -f vm${maquina} # Por si acaso existe. Es temporal, se tendría que modificar por algo más decente
+            nombre=$x
+            docker container rm -f $nombre # Por si acaso existe. Es temporal, se tendría que modificar por algo más decente
+
+            pos=$(( pos + 1 ))
+        # Se lee la imagen deseada y se crea el contenedor
+        elif [ $pos -eq 2 ]; then
+            imagen=$x
+
+            run_container || error
+
+            docker network disconnect bridge $nombre
 
             # Se crea una nueva pestaña del terminal para poder interactuar con el contenedor y, cuando finalice, poder seguir usando la pestaña.
             # No es nada portable porque depende del programa de terminal usado, pero suponemos que este script solo se va a usar en la VM de Alpine
-            xfce4-terminal --tab -e "ash -c 'docker container run --name vm${maquina} --hostname vm${maquina} -it --cap-add=NET_ADMIN busybox; exec ash'"
-
-            docker network disconnect bridge vm${maquina}
+            xfce4-terminal --tab -e "ash -c 'docker container attach $nombre; exec ash'"
+            
             pos=$(( pos + 1 ))
+        # Se conecta el contenedor a las redes especificadas
         else
             # Volvemos a cambiar el IFS para trabajar ahora con pares separados por comas, que indican las redes a las que se debe conectar el contenedor
             OTHER_OIFS=$IFS
             IFS=","
             for red in $x; do
-                docker network connect red${red} vm${maquina}
+                docker network connect red${red} $nombre
             done
             pos=1
             IFS=OTHER_OIFS

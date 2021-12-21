@@ -24,18 +24,21 @@
 # Es necesario pasar la variable de entorno DISPLAY para poder usar aplicaciones de interfaz gráfica
 # Se monta la carpeta en la que se ejecuta el comando para compartir archivos con el contenedor
 # Se monta el socket de X11 para poder usar aplicaciones de interfaz gráfica
-# La opción IPC es necesaria para la ejecución de GUI (se modificará en la siguiente versión)
+# Se crea una nueva cookie de X11 para poder usar el servidor gráfico sin necesidad de xhost
+# La opción init existe porque se van a ejecutar varios procesos dentro del contenedor
 
 run_container() {
     docker container run \
         --name $nombre \
         --hostname $nombre \
         -d -it --cap-add=NET_ADMIN \
+        --init \
         --env DISPLAY \
+        --env XAUTHORITY=/cookie \
         --mount type=bind,source="$(pwd)",target=/mnt/shared \
         --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \
-        --ipc=host \
-        $imagen
+        --mount type=bind,source="${Cookiefile}",target=/cookie \
+	$imagen
 }
 
 error() {
@@ -48,6 +51,13 @@ for i in $(seq 1 $1); do
     docker network rm red${i} # Por si acaso existe. Es temporal, se tendría que modificar por algo más decente
     docker network create red${i}
 done
+
+# Creamos la cookie de X11 para usar aplicaciones con GUI
+Cookiefile=~/containercookie
+:> $Cookiefile
+xauth -f $Cookiefile generate $DISPLAY . untrusted timeout 3600
+Cookie="$(xauth -f $Cookiefile nlist $DISPLAY | sed -e 's/^..../ffff/')"
+echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
 
 shift # Se va eliminando el primer argumento sucesivamente para utilizar siempre $1. Referencia: https://stackoverflow.com/questions/3575793/iterate-through-parameters-skipping-the-first
 while [ ${#} -gt 0 ]; do

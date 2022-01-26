@@ -42,15 +42,92 @@ run_container() {
 }
 
 error() {
-    echo "Error en la creación de los contenedores"
-    exit
+    echo "$*" 1>&2
+    exit 1
 }
 
-# Primero eliminamos las redes si existen y luego se crean
-for i in $(seq 1 $1); do
-    docker network rm red${i} # Por si acaso existe. Es temporal, se tendría que modificar por algo más decente
-    docker network create red${i}
-done
+uso() {
+    echo "Uso: $0 <-c fichero | -l nombre_practica | -p nombre_practica | -d nombre_practica | -h>"
+    echo ""
+    echo "-c: Crea el entorno de contenedores a partir del fichero YAML proporcionado (se destruyen los contenedores asociados al entorno del fichero)"
+    echo "-l: Ejecuta todos los contenedores asociados al entorno proporcionado"
+    echo "-p: Detiene todos los contenedores asociados al entorno proporcionado"
+    echo "-d: Destruye todos los contenedores asociados al entorno proporcionado"
+    echo "-h: Muestra este mensaje de ayuda"
+}
+
+destruir_entorno() {
+    echo "hola" > /dev/null
+}
+
+crear_entorno() {
+    nombre_practica=$(yq e '.nombre_practica' $fichero)
+    if [ $nombre_practica == "null" ]; then
+        error "Se debe especificar el campo nombre_practica en el fichero"
+    fi
+
+    destruir_entorno
+
+    numero_maquinas=$(yq e '.maquinas | length' $fichero) 
+    if [ $numero_maquinas == 0 ]; then
+        error "Se deben especificar los contenedores deseados en el campo maquinas del fichero"
+    fi
+
+    # Primero se crean todos los contenedores
+    i=0
+    while [ $i -lt $numero_maquinas ]
+    do
+        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' $fichero)
+        if [ $nombre_VM == "null" ]; then
+            destruir_entorno
+            error "Se debe especificar el campo nombre en maquinas[$i]"
+        fi
+
+        # Se concatena el nombre de la practica con el nombre de la VM para poder hacer operaciones asociadas a entornos de prácticas
+        nombre="${nombre_practica}_${nombre_VM}"
+
+        imagen=$(yq e '.maquinas['"$i"'].imagen' $fichero)
+        if [ $imagen == "null" ]; then
+            destruir_entorno
+            error "Se debe especificar el campo imagen en maquinas[$i]"
+        fi
+        
+        # Se crea el contenedor y se le desconecta del adaptador bridge
+        run_container || error "Error en la creación del contenedor ${nombre}"
+        docker network disconnect bridge $nombre
+
+        numero_redes=$(yq e '.maquinas['"$i"'].redes | length' $fichero) 
+        if [ $numero_redes == 0 ]; then
+            destruir_entorno
+            error "Se debe especificar el campo redes en maquinas[$i]"
+        fi
+
+        j=0
+        while [ $j -lt $numero_redes ]
+        do
+            red_fichero=$(yq e '.maquinas['"$i"'].redes['"$j"']' $fichero)
+            red="red_${red_fichero}"
+
+            # Solo se crea la red si no existe previamente
+            docker network inspect $red > /dev/null 2>&1 || docker network create $red
+
+            docker network connect $red $nombre
+
+            j=$((j+1))
+        done
+        i=$((i+1))
+    done
+
+    # Si todos los contenedores se han creado exitosamente, se abren las terminales
+    i=0
+    while [ $i -lt $numero_maquinas ]
+    do
+        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' $fichero)
+        nombre="${nombre_practica}_${nombre_VM}"
+        xfce4-terminal --tab -e "ash -c 'docker container attach $nombre; exec ash'"
+        i=$((i+1))
+    done
+}
 
 # Creamos la cookie de X11 para usar aplicaciones con GUI
 Cookiefile=~/containercookie
@@ -59,48 +136,83 @@ xauth -f $Cookiefile generate $DISPLAY . untrusted timeout 3600
 Cookie="$(xauth -f $Cookiefile nlist $DISPLAY | sed -e 's/^..../ffff/')"
 echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
 
-shift # Se va eliminando el primer argumento sucesivamente para utilizar siempre $1. Referencia: https://stackoverflow.com/questions/3575793/iterate-through-parameters-skipping-the-first
-while [ ${#} -gt 0 ]; do
+# Controla que el comando se ejecute solo con un flag
+opcion=false
 
-    # Se modifica el IFS para poder trabajar con pares separados por : en los bucles for. Referencia: https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
-    OIFS=$IFS
-    IFS=":"
+while getopts ":c:l:d:p:h" o; do
+    case "${o}" in
+        c)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            fichero=${OPTARG}
 
-    pos=1
-    nombre=''
+            if [ ! -f $fichero ]; then
+                error "El fichero $fichero no existe"
+            fi
+            comando="crear"
+            opcion=true
+            ;;
+        l)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            nombre_practica=${OPTARG}
 
-    for x in $1; do
-        # Se almacena el nombre del contenedor
-        if [ $pos -eq 1 ]; then
-            nombre=$x
-            docker container rm -f $nombre # Por si acaso existe. Es temporal, se tendría que modificar por algo más decente
+            if [ -z $nombre_practica ]; then
+                error "Se debe proporcionar el valor nombre_practica"
+            fi
 
-            pos=$(( pos + 1 ))
-        # Se lee la imagen deseada y se crea el contenedor
-        elif [ $pos -eq 2 ]; then
-            imagen=$x
+            comando="lanzar"
+            opcion=true
+            ;;
+        d)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            nombre_practica=${OPTARG}
 
-            run_container || error
+            if [ -z $nombre_practica ]; then
+                error "Se debe proporcionar el valor nombre_practica"
+            fi
 
-            docker network disconnect bridge $nombre
+            comando="destruir"
+            opcion=true
+            ;;
+        p)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            nombre_practica=${OPTARG}
 
-            # Se crea una nueva pestaña del terminal para poder interactuar con el contenedor y, cuando finalice, poder seguir usando la pestaña.
-            # No es nada portable porque depende del programa de terminal usado, pero suponemos que este script solo se va a usar en la VM de Alpine
-            xfce4-terminal --tab -e "ash -c 'docker container attach $nombre; exec ash'"
-            
-            pos=$(( pos + 1 ))
-        # Se conecta el contenedor a las redes especificadas
-        else
-            # Volvemos a cambiar el IFS para trabajar ahora con pares separados por comas, que indican las redes a las que se debe conectar el contenedor
-            OTHER_OIFS=$IFS
-            IFS=","
-            for red in $x; do
-                docker network connect red${red} $nombre
-            done
-            pos=1
-            IFS=OTHER_OIFS
-        fi
-    done
-    IFS=$OIFS
-    shift
+            if [ -z $nombre_practica ]; then
+                error "Se debe proporcionar el valor nombre_practica"
+            fi
+
+            comando="parar"
+            opcion=true
+            ;;
+        h)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+
+            uso
+            exit 0
+            ;;
+        *)
+            echo "Opción ${o} no válida"
+            uso
+            exit 1
+            ;;
+    esac
 done
+shift $((OPTIND-1))
+
+case $comando in
+    crear)
+        crear_entorno && exit
+        ;;
+    lanzar)
+        lanzar_entorno && exit
+        ;;
+    destruir)
+        destruir_entorno && exit
+        ;;
+    parar)
+        parar_entorno && exit
+        ;;
+    *)
+        uso && exit 1
+        ;;
+esac

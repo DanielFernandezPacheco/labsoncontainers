@@ -69,7 +69,7 @@ destruir_entorno() {
 lanzar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
         echo "Lanzando de nuevo los contenedores de "$nombre_practica""
-        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
+        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido lanzar el entorno "$nombre_practica""
 
         for i in $(docker ps -qa -f name="$nombre_practica")
         do
@@ -77,6 +77,16 @@ lanzar_entorno() {
         done
 
         echo "Contenedores lanzados exitosamente"
+    else
+        error "No existen contenedores asociados a "$nombre_practica""
+    fi    
+}
+
+parar_entorno() {
+    if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
+        echo "Deteniendo los contenedores de "$nombre_practica""
+        docker container stop $(docker ps -a --filter "name="$nombre_practica"" --format '{{.Names}}') || error "No se ha podido parar el entorno "$nombre_practica""
+        echo "Contenedores detenidos exitosamente"
     else
         error "No existen contenedores asociados a "$nombre_practica""
     fi    

@@ -41,6 +41,17 @@ run_container() {
 	"$imagen"
 }
 
+crear_cookie() {
+    if [ ! -d ~/.cookies ]; then
+        mkdir ~/.cookies
+    fi
+    Cookiefile=~/.cookies/"$nombre"_cookie
+    :> $Cookiefile
+    xauth -f "$Cookiefile" generate "$DISPLAY" . untrusted timeout 3600
+    Cookie="$(xauth -f "$Cookiefile" nlist "$DISPLAY" | sed -e 's/^..../ffff/')"
+    echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
+}
+
 error() {
     echo "$*" 1>&2
     exit 1
@@ -125,9 +136,12 @@ crear_entorno() {
             destruir_entorno
             error "Se debe especificar el campo imagen en maquinas[$i]"
         fi
+
+        # Se crea la cookie de X11 para usar aplicaciones con GUI
+        crear_cookie || error "Error al crear la cookie para "$nombre""
         
         # Se crea el contenedor y se le desconecta del adaptador bridge
-        run_container || error "Error en la creación del contenedor ${nombre}"
+        run_container || error "Error en la creación del contenedor "$nombre""
         docker network disconnect bridge "$nombre"
 
         numero_redes=$(yq e '.maquinas['"$i"'].redes | length' $fichero) 
@@ -162,13 +176,6 @@ crear_entorno() {
         i=$((i+1))
     done
 }
-
-# Creamos la cookie de X11 para usar aplicaciones con GUI
-Cookiefile=~/containercookie
-:> $Cookiefile
-xauth -f "$Cookiefile" generate "$DISPLAY" . untrusted timeout 3600
-Cookie="$(xauth -f "$Cookiefile" nlist "$DISPLAY" | sed -e 's/^..../ffff/')"
-echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
 
 # Controla que el comando se ejecute solo con un flag
 opcion=false

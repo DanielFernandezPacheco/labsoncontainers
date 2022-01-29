@@ -59,8 +59,24 @@ uso() {
 destruir_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
         echo "Eliminando los contenedores de "$nombre_practica""
-        docker container rm -f $(docker ps --filter "name=practica0" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
+        docker container rm -f $(docker ps -a --filter "name="$nombre_practica"" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
         echo "Contenedores eliminados exitosamente"
+    else
+        error "No existen contenedores asociados a "$nombre_practica""
+    fi    
+}
+
+lanzar_entorno() {
+    if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
+        echo "Lanzando de nuevo los contenedores de "$nombre_practica""
+        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
+
+        for i in $(docker ps -qa -f name="$nombre_practica")
+        do
+            xfce4-terminal --tab -e "ash -c 'docker container attach $i; exec ash'"
+        done
+
+        echo "Contenedores lanzados exitosamente"
     else
         error "No existen contenedores asociados a "$nombre_practica""
     fi    

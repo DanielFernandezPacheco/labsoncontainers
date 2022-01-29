@@ -29,8 +29,8 @@
 
 run_container() {
     docker container run \
-        --name $nombre \
-        --hostname $nombre \
+        --name "$nombre" \
+        --hostname "$nombre" \
         -d -it --cap-add=NET_ADMIN \
         --init \
         --env DISPLAY \
@@ -38,7 +38,7 @@ run_container() {
         --mount type=bind,source="$(pwd)",target=/mnt/shared \
         --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \
         --mount type=bind,source="${Cookiefile}",target=/cookie \
-	$imagen
+	"$imagen"
 }
 
 error() {
@@ -62,7 +62,7 @@ destruir_entorno() {
 
 crear_entorno() {
     nombre_practica=$(yq e '.nombre_practica' $fichero)
-    if [ $nombre_practica == "null" ]; then
+    if [ "$nombre_practica" == "null" ]; then
         error "Se debe especificar el campo nombre_practica en el fichero"
     fi
 
@@ -94,7 +94,7 @@ crear_entorno() {
         
         # Se crea el contenedor y se le desconecta del adaptador bridge
         run_container || error "Error en la creación del contenedor ${nombre}"
-        docker network disconnect bridge $nombre
+        docker network disconnect bridge "$nombre"
 
         numero_redes=$(yq e '.maquinas['"$i"'].redes | length' $fichero) 
         if [ $numero_redes == 0 ]; then
@@ -109,9 +109,9 @@ crear_entorno() {
             red="red_${red_fichero}"
 
             # Solo se crea la red si no existe previamente
-            docker network inspect $red > /dev/null 2>&1 || docker network create $red
+            docker network inspect "$red" > /dev/null 2>&1 || docker network create "$red"
 
-            docker network connect $red $nombre
+            docker network connect "$red" "$nombre"
 
             j=$((j+1))
         done
@@ -124,7 +124,7 @@ crear_entorno() {
     do
         nombre_VM=$(yq e '.maquinas['"$i"'].nombre' $fichero)
         nombre="${nombre_practica}_${nombre_VM}"
-        xfce4-terminal --tab -e "ash -c 'docker container attach $nombre; exec ash'"
+        xfce4-terminal --tab -e "ash -c 'docker container attach "$nombre"; exec ash'"
         i=$((i+1))
     done
 }
@@ -132,8 +132,8 @@ crear_entorno() {
 # Creamos la cookie de X11 para usar aplicaciones con GUI
 Cookiefile=~/containercookie
 :> $Cookiefile
-xauth -f $Cookiefile generate $DISPLAY . untrusted timeout 3600
-Cookie="$(xauth -f $Cookiefile nlist $DISPLAY | sed -e 's/^..../ffff/')"
+xauth -f "$Cookiefile" generate "$DISPLAY" . untrusted timeout 3600
+Cookie="$(xauth -f "$Cookiefile" nlist "$DISPLAY" | sed -e 's/^..../ffff/')"
 echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
 
 # Controla que el comando se ejecute solo con un flag
@@ -145,8 +145,8 @@ while getopts ":c:l:d:p:h" o; do
             $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
             fichero=${OPTARG}
 
-            if [ ! -f $fichero ]; then
-                error "El fichero $fichero no existe"
+            if [ ! -f "$fichero" ]; then
+                error "El fichero "$fichero" no existe"
             fi
             comando="crear"
             opcion=true
@@ -155,7 +155,7 @@ while getopts ":c:l:d:p:h" o; do
             $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
             nombre_practica=${OPTARG}
 
-            if [ -z $nombre_practica ]; then
+            if [ -z "$nombre_practica" ]; then
                 error "Se debe proporcionar el valor nombre_practica"
             fi
 
@@ -166,7 +166,7 @@ while getopts ":c:l:d:p:h" o; do
             $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
             nombre_practica=${OPTARG}
 
-            if [ -z $nombre_practica ]; then
+            if [ -z "$nombre_practica" ]; then
                 error "Se debe proporcionar el valor nombre_practica"
             fi
 
@@ -177,7 +177,7 @@ while getopts ":c:l:d:p:h" o; do
             $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
             nombre_practica=${OPTARG}
 
-            if [ -z $nombre_practica ]; then
+            if [ -z "$nombre_practica" ]; then
                 error "Se debe proporcionar el valor nombre_practica"
             fi
 
@@ -199,7 +199,7 @@ while getopts ":c:l:d:p:h" o; do
 done
 shift $((OPTIND-1))
 
-case $comando in
+case "$comando" in
     crear)
         crear_entorno && exit
         ;;

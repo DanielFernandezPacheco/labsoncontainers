@@ -57,7 +57,13 @@ uso() {
 }
 
 destruir_entorno() {
-    echo "hola" > /dev/null
+    if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
+        echo "Eliminando los contenedores de "$nombre_practica""
+        docker container rm -f $(docker ps --filter "name=practica0" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
+        echo "Contenedores eliminados exitosamente"
+    else
+        error "No existen contenedores asociados a "$nombre_practica""
+    fi    
 }
 
 crear_entorno() {
@@ -66,7 +72,9 @@ crear_entorno() {
         error "Se debe especificar el campo nombre_practica en el fichero"
     fi
 
-    destruir_entorno
+    if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
+        destruir_entorno
+    fi
 
     numero_maquinas=$(yq e '.maquinas | length' $fichero) 
     if [ $numero_maquinas == 0 ]; then

@@ -46,7 +46,7 @@ crear_cookie() {
         mkdir ~/.cookies
     fi
     Cookiefile=~/.cookies/"$nombre"_cookie
-    :> $Cookiefile
+    :> "$Cookiefile"
     xauth -f "$Cookiefile" generate "$DISPLAY" . untrusted timeout 3600
     Cookie="$(xauth -f "$Cookiefile" nlist "$DISPLAY" | sed -e 's/^..../ffff/')"
     echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
@@ -81,60 +81,60 @@ uso() {
 
 destruir_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Eliminando los contenedores de "$nombre_practica""
-        docker container rm -f $(docker ps -a --filter "name="$nombre_practica"" --format '{{.Names}}') || error "No se ha podido borrar el entorno "$nombre_practica""
+        echo "Eliminando los contenedores de $nombre_practica"
+        docker container rm -f $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido borrar el entorno $nombre_practica"
         echo "Contenedores eliminados exitosamente"
     else
-        error "No existen contenedores asociados a "$nombre_practica""
+        error "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
 lanzar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Lanzando de nuevo los contenedores de "$nombre_practica""
-        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido lanzar el entorno "$nombre_practica""
+        echo "Lanzando de nuevo los contenedores de $nombre_practica"
+        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido lanzar el entorno $nombre_practica"
 
         # Se abren las terminales
-        contenedores="$(docker ps -a -f name="$nombre_practica" --format {{.Names}})"
-        crear_terminal $contenedores
+        crear_terminal $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}')
 
         echo "Contenedores lanzados exitosamente"
     else
-        error "No existen contenedores asociados a "$nombre_practica""
+        error "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
 parar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Deteniendo los contenedores de "$nombre_practica""
-        docker container stop $(docker ps -a --filter "name="$nombre_practica"" --format '{{.Names}}') || error "No se ha podido parar el entorno "$nombre_practica""
+        echo "Deteniendo los contenedores de $nombre_practica"
+        docker container stop $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido parar el entorno $nombre_practica"
         echo "Contenedores detenidos exitosamente"
     else
-        error "No existen contenedores asociados a "$nombre_practica""
+        error "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
 crear_entorno() {
-    nombre_practica=$(yq e '.nombre_practica' $fichero)
-    if [ "$nombre_practica" == "null" ]; then
+    nombre_practica=$(yq e '.nombre_practica' "$fichero")
+    if [ "$nombre_practica" = "null" ]; then
         error "Se debe especificar el campo nombre_practica en el fichero"
     fi
 
+    # Si ya existen contenedores asociados a la práctica, se destruyen previamente
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
         destruir_entorno
     fi
 
-    numero_maquinas=$(yq e '.maquinas | length' $fichero) 
-    if [ $numero_maquinas == 0 ]; then
+    numero_maquinas=$(yq e '.maquinas | length' "$fichero") 
+    if [ "$numero_maquinas" = 0 ]; then
         error "Se deben especificar los contenedores deseados en el campo maquinas del fichero"
     fi
 
     # Primero se crean todos los contenedores
     i=0
-    while [ $i -lt $numero_maquinas ]
+    while [ $i -lt "$numero_maquinas" ]
     do
-        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' $fichero)
-        if [ $nombre_VM == "null" ]; then
+        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' "$fichero")
+        if [ "$nombre_VM" = "null" ]; then
             destruir_entorno
             error "Se debe especificar el campo nombre en maquinas[$i]"
         fi
@@ -142,29 +142,29 @@ crear_entorno() {
         # Se concatena el nombre de la practica con el nombre de la VM para poder hacer operaciones asociadas a entornos de prácticas
         nombre="${nombre_practica}_${nombre_VM}"
 
-        imagen=$(yq e '.maquinas['"$i"'].imagen' $fichero)
-        if [ $imagen == "null" ]; then
+        imagen=$(yq e '.maquinas['"$i"'].imagen' "$fichero")
+        if [ "$imagen" = "null" ]; then
             destruir_entorno
             error "Se debe especificar el campo imagen en maquinas[$i]"
         fi
 
         # Se crea la cookie de X11 para usar aplicaciones con GUI
-        crear_cookie || error "Error al crear la cookie para "$nombre""
+        crear_cookie || error "Error al crear la cookie para $nombre"
         
         # Se crea el contenedor y se le desconecta del adaptador bridge
-        run_container || error "Error en la creación del contenedor "$nombre""
+        run_container || error "Error en la creación del contenedor $nombre"
         docker network disconnect bridge "$nombre"
 
-        numero_redes=$(yq e '.maquinas['"$i"'].redes | length' $fichero) 
-        if [ $numero_redes == 0 ]; then
+        numero_redes=$(yq e '.maquinas['"$i"'].redes | length' "$fichero") 
+        if [ "$numero_redes" = 0 ]; then
             destruir_entorno
             error "Se debe especificar el campo redes en maquinas[$i]"
         fi
 
         j=0
-        while [ $j -lt $numero_redes ]
+        while [ $j -lt "$numero_redes" ]
         do
-            red_fichero=$(yq e '.maquinas['"$i"'].redes['"$j"']' $fichero)
+            red_fichero=$(yq e '.maquinas['"$i"'].redes['"$j"']' "$fichero")
             red="red_${red_fichero}"
 
             # Solo se crea la red si no existe previamente
@@ -178,8 +178,7 @@ crear_entorno() {
     done
 
     # Si todos los contenedores se han creado exitosamente, se abren las terminales
-    contenedores="$(docker ps -a -f name="$nombre_practica" --format {{.Names}})"
-    crear_terminal $contenedores
+    crear_terminal $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}')
 }
 
 # Controla que el comando se ejecute solo con un flag
@@ -192,7 +191,7 @@ while getopts ":c:l:d:p:h" o; do
             fichero=${OPTARG}
 
             if [ ! -f "$fichero" ]; then
-                error "El fichero "$fichero" no existe"
+                error "El fichero $fichero no existe"
             fi
             comando="crear"
             opcion=true

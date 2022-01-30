@@ -1,0 +1,15 @@
+nombre_practica: practica0
+contenedores:
+  - nombre: vm1
+    imagen: rys
+    redes:
+    - 1
+  - nombre: router
+    imagen: rys
+    redes:
+    - 1
+    - 2
+  - nombre: vm2
+    imagen: rys
+    redes:
+    - 2

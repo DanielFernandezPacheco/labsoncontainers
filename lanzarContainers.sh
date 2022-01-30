@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2021 Mario Román Dono
+# Copyright (C) 2021-2022 Mario Román Dono
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-
-# Uso: ./lanzarContainers.sh n_redes [<nombre:imagen:redes>]
 
 # El contenedor se arranca en modo detached para poder saber cuándo termina de crearse y poder configurar las redes correctamente
 # Se añade la capacidad NET_ADMIN para poder configurar las interfaces de red
@@ -41,6 +39,8 @@ run_container() {
 	"$imagen"
 }
 
+# Para cada contenedor, se crea una cookie para acceder al servidor X
+# Fuente: https://github.com/mviereck/x11docker/wiki/X-authentication-with-cookies-and-xhost-("No-protocol-specified"-error)#untrusted-cookie-for-container-applications
 crear_cookie() {
     if [ ! -d ~/.cookies ]; then
         mkdir ~/.cookies
@@ -124,28 +124,28 @@ crear_entorno() {
         destruir_entorno
     fi
 
-    numero_maquinas=$(yq e '.maquinas | length' "$fichero") 
-    if [ "$numero_maquinas" = 0 ]; then
-        error "Se deben especificar los contenedores deseados en el campo maquinas del fichero"
+    numero_contenedores=$(yq e '.contenedores | length' "$fichero") 
+    if [ "$numero_contenedores" = 0 ]; then
+        error "Se deben especificar los contenedores deseados en el campo contenedores del fichero"
     fi
 
     # Primero se crean todos los contenedores
     i=0
-    while [ $i -lt "$numero_maquinas" ]
+    while [ $i -lt "$numero_contenedores" ]
     do
-        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' "$fichero")
-        if [ "$nombre_VM" = "null" ]; then
+        nombre_contenedor=$(yq e '.contenedores['"$i"'].nombre' "$fichero")
+        if [ "$nombre_contenedor" = "null" ]; then
             destruir_entorno
-            error "Se debe especificar el campo nombre en maquinas[$i]"
+            error "Se debe especificar el campo nombre en contenedores[$i]"
         fi
 
-        # Se concatena el nombre de la practica con el nombre de la VM para poder hacer operaciones asociadas a entornos de prácticas
-        nombre="${nombre_practica}_${nombre_VM}"
+        # Se concatena el nombre de la practica con el nombre del contenedor para poder hacer operaciones asociadas a entornos de prácticas
+        nombre="${nombre_practica}_${nombre_contenedor}"
 
-        imagen=$(yq e '.maquinas['"$i"'].imagen' "$fichero")
+        imagen=$(yq e '.contenedores['"$i"'].imagen' "$fichero")
         if [ "$imagen" = "null" ]; then
             destruir_entorno
-            error "Se debe especificar el campo imagen en maquinas[$i]"
+            error "Se debe especificar el campo imagen en contenedores[$i]"
         fi
 
         # Se crea la cookie de X11 para usar aplicaciones con GUI
@@ -155,16 +155,16 @@ crear_entorno() {
         run_container || error "Error en la creación del contenedor $nombre"
         docker network disconnect bridge "$nombre"
 
-        numero_redes=$(yq e '.maquinas['"$i"'].redes | length' "$fichero") 
+        numero_redes=$(yq e '.contenedores['"$i"'].redes | length' "$fichero") 
         if [ "$numero_redes" = 0 ]; then
             destruir_entorno
-            error "Se debe especificar el campo redes en maquinas[$i]"
+            error "Se debe especificar el campo redes en contenedores[$i]"
         fi
 
         j=0
         while [ $j -lt "$numero_redes" ]
         do
-            red_fichero=$(yq e '.maquinas['"$i"'].redes['"$j"']' "$fichero")
+            red_fichero=$(yq e '.contenedores['"$i"'].redes['"$j"']' "$fichero")
             red="red_${red_fichero}"
 
             # Solo se crea la red si no existe previamente

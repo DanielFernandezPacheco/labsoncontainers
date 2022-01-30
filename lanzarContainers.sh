@@ -52,6 +52,18 @@ crear_cookie() {
     echo "$Cookie" | xauth -f "$Cookiefile" nmerge -
 }
 
+# Fuente: http://mywiki.wooledge.org/BashFAQ/050
+crear_terminal() {
+    primer_nombre=$1
+    shift
+    first=1
+    for nombre; do
+        if [ "$first" = 1 ]; then set --; first=0; fi
+        set -- "$@" --tab -e "ash -c 'docker container attach $nombre; exec ash'"
+    done
+    xfce4-terminal -e "ash -c 'docker container attach $primer_nombre; exec ash'" "$@"
+}
+
 error() {
     echo "$*" 1>&2
     exit 1
@@ -82,10 +94,9 @@ lanzar_entorno() {
         echo "Lanzando de nuevo los contenedores de "$nombre_practica""
         docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido lanzar el entorno "$nombre_practica""
 
-        for i in $(docker ps -qa -f name="$nombre_practica")
-        do
-            xfce4-terminal --tab -e "ash -c 'docker container attach $i; exec ash'"
-        done
+        # Se abren las terminales
+        contenedores="$(docker ps -a -f name="$nombre_practica" --format {{.Names}})"
+        crear_terminal $contenedores
 
         echo "Contenedores lanzados exitosamente"
     else
@@ -167,14 +178,8 @@ crear_entorno() {
     done
 
     # Si todos los contenedores se han creado exitosamente, se abren las terminales
-    i=0
-    while [ $i -lt $numero_maquinas ]
-    do
-        nombre_VM=$(yq e '.maquinas['"$i"'].nombre' $fichero)
-        nombre="${nombre_practica}_${nombre_VM}"
-        xfce4-terminal --tab -e "ash -c 'docker container attach "$nombre"; exec ash'"
-        i=$((i+1))
-    done
+    contenedores="$(docker ps -a -f name="$nombre_practica" --format {{.Names}})"
+    crear_terminal $contenedores
 }
 
 # Controla que el comando se ejecute solo con un flag

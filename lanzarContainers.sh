@@ -70,12 +70,12 @@ error() {
 }
 
 uso() {
-    echo "Uso: $0 <-c fichero | -l nombre_practica | -p nombre_practica | -d nombre_practica | -h>"
+    echo "Uso: $0 <-c fichero | -l nombre_practica | -p nombre_practica | -r nombre_practica | -h>"
     echo ""
     echo "-c: Crea el entorno de contenedores a partir del fichero YAML proporcionado (se destruyen los contenedores asociados al entorno del fichero)"
     echo "-l: Ejecuta todos los contenedores asociados al entorno proporcionado"
     echo "-p: Detiene todos los contenedores asociados al entorno proporcionado"
-    echo "-d: Destruye todos los contenedores asociados al entorno proporcionado"
+    echo "-r: Destruye todos los contenedores asociados al entorno proporcionado"
     echo "-h: Muestra este mensaje de ayuda"
 }
 
@@ -184,10 +184,10 @@ crear_entorno() {
 # Controla que el comando se ejecute solo con un flag
 opcion=false
 
-while getopts ":c:l:d:p:h" o; do
+while getopts ":c:l:r:p:h" o; do
     case "${o}" in
         c)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
             fichero=${OPTARG}
 
             if [ ! -f "$fichero" ]; then
@@ -197,7 +197,7 @@ while getopts ":c:l:d:p:h" o; do
             opcion=true
             ;;
         l)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -207,8 +207,8 @@ while getopts ":c:l:d:p:h" o; do
             comando="lanzar"
             opcion=true
             ;;
-        d)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+        r)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -219,7 +219,7 @@ while getopts ":c:l:d:p:h" o; do
             opcion=true
             ;;
         p)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -230,7 +230,7 @@ while getopts ":c:l:d:p:h" o; do
             opcion=true
             ;;
         h)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-d|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
 
             uso
             exit 0

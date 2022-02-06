@@ -70,10 +70,11 @@ error() {
 }
 
 uso() {
-    echo "Uso: $0 <-c fichero | -l nombre_practica | -p nombre_practica | -r nombre_practica | -h>"
+    echo "Uso: $0 <-c fichero | -l nombre_practica | -i nombre_practica | -p nombre_practica | -r nombre_practica | -h>"
     echo ""
     echo "-c: Crea el entorno de contenedores a partir del fichero YAML proporcionado (se destruyen los contenedores asociados al entorno del fichero)"
     echo "-l: Ejecuta todos los contenedores asociados al entorno proporcionado"
+    echo "-i: Muestra la información de todos los contenedores asociados al entorno proporcionado"
     echo "-p: Detiene todos los contenedores asociados al entorno proporcionado"
     echo "-r: Destruye todos los contenedores asociados al entorno proporcionado"
     echo "-h: Muestra este mensaje de ayuda"
@@ -108,6 +109,15 @@ parar_entorno() {
         echo "Deteniendo los contenedores de $nombre_practica"
         docker container stop $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido parar el entorno $nombre_practica"
         echo "Contenedores detenidos exitosamente"
+    else
+        error "No existen contenedores asociados a $nombre_practica"
+    fi    
+}
+
+inspeccionar_entorno() {
+    if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
+        echo "Información de los contenedores de $nombre_practica"
+        docker container inspect $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido parar el entorno $nombre_practica"
     else
         error "No existen contenedores asociados a $nombre_practica"
     fi    
@@ -184,10 +194,10 @@ crear_entorno() {
 # Controla que el comando se ejecute solo con un flag
 opcion=false
 
-while getopts ":c:l:r:p:h" o; do
+while getopts ":c:l:r:p:i:h" o; do
     case "${o}" in
         c)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h>"
             fichero=${OPTARG}
 
             if [ ! -f "$fichero" ]; then
@@ -197,7 +207,7 @@ while getopts ":c:l:r:p:h" o; do
             opcion=true
             ;;
         l)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -208,7 +218,7 @@ while getopts ":c:l:r:p:h" o; do
             opcion=true
             ;;
         r)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -219,7 +229,7 @@ while getopts ":c:l:r:p:h" o; do
             opcion=true
             ;;
         p)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h>"
             nombre_practica=${OPTARG}
 
             if [ -z "$nombre_practica" ]; then
@@ -229,8 +239,19 @@ while getopts ":c:l:r:p:h" o; do
             comando="parar"
             opcion=true
             ;;
+        i)
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h|>"
+            nombre_practica=${OPTARG}
+
+            if [ -z "$nombre_practica" ]; then
+                error "Se debe proporcionar el valor nombre_practica"
+            fi
+
+            comando="inspeccionar"
+            opcion=true
+            ;;
         h)
-            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-h>"
+            $opcion && error "Solo se puede especificar una opción <-c|-l|-r|-p|-i|-h>"
 
             uso
             exit 0
@@ -256,6 +277,9 @@ case "$comando" in
         ;;
     parar)
         parar_entorno && exit
+        ;;
+    inspeccionar)
+        inspeccionar_entorno && exit
         ;;
     *)
         uso && exit 1

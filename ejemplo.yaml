@@ -4,6 +4,7 @@ contenedores:
     imagen: rys
     redes:
     - 1
+    background: true
   - nombre: router
     imagen: rys
     redes:

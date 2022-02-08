@@ -141,6 +141,7 @@ crear_entorno() {
 
     # Primero se crean todos los contenedores
     i=0
+    listaContenedoresTerminal=""
     while [ $i -lt "$numero_contenedores" ]
     do
         nombre_contenedor=$(yq e '.contenedores['"$i"'].nombre' "$fichero")
@@ -156,6 +157,15 @@ crear_entorno() {
         if [ "$imagen" = "null" ]; then
             destruir_entorno
             error "Se debe especificar el campo imagen en contenedores[$i]"
+        fi
+
+        background=$(yq e '.contenedores['"$i"'].background' "$fichero")
+        if [ "$background" != true ]; then
+            if [ -z "$listaContenedoresTerminal" ]; then
+                listaContenedoresTerminal="$nombre"
+            else
+                listaContenedoresTerminal="$listaContenedoresTerminal $nombre"
+            fi
         fi
 
         # Se crea la cookie de X11 para usar aplicaciones con GUI
@@ -188,7 +198,7 @@ crear_entorno() {
     done
 
     # Si todos los contenedores se han creado exitosamente, se abren las terminales
-    crear_terminal $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}')
+    crear_terminal $listaContenedoresTerminal
 }
 
 # Controla que el comando se ejecute solo con un flag

@@ -3,14 +3,16 @@ contenedores:
   - nombre: vm1
     imagen: rys
     redes:
-    - 1
+    - nombre: 1
+      ip: 192.168.1.10/24
     background: true
   - nombre: router
     imagen: rys
     redes:
-    - 1
-    - 2
+    - nombre: 1
+    - nombre: 2
+      ip: 192.168.2.10/24
   - nombre: vm2
     imagen: rys
     redes:
-    - 2
+    - nombre: 2

@@ -82,9 +82,12 @@ uso() {
 
 destruir_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Eliminando los contenedores de $nombre_practica"
+        echo "Eliminando los contenedores y redes de $nombre_practica"
         docker container rm -f $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido borrar el entorno $nombre_practica"
-        echo "Contenedores eliminados exitosamente"
+        if [ "$(docker network ls -q --filter name="$nombre_practica")" ]; then
+            docker network rm $(docker network ls -q --filter name="$nombre_practica") || error "No se ha podido borrar el entorno $nombre_practica"
+        fi
+        echo "Contenedores y redes eliminados exitosamente"
     else
         error "No existen contenedores asociados a $nombre_practica"
     fi    
@@ -184,13 +187,35 @@ crear_entorno() {
         j=0
         while [ $j -lt "$numero_redes" ]
         do
-            red_fichero=$(yq e '.contenedores['"$i"'].redes['"$j"']' "$fichero")
-            red="red_${red_fichero}"
+            red_fichero=$(yq e '.contenedores['"$i"'].redes['"$j"'].nombre' "$fichero")
+            if [ "$red_fichero" = "null" ]; then
+                destruir_entorno
+                error "Se debe especificar el campo nombre en contenedores[$i].redes[$j]"
+            fi
+            red="${nombre_practica}_red_${red_fichero}"
 
+            ip=$(yq e '.contenedores['"$i"'].redes['"$j"'].ip' "$fichero")
+            if [ "$ip" = "null" ]; then
+                subnet_option=""
+                ip_option=""
+            else
+                # Comprueba que la IP introducida esté en formato CIDR válido
+                if [ "$(ipcalc -s -n "$ip" )" ]; then
+                    direccion_red="$(ipcalc -n "$ip" | sed 's/NETWORK=//')"
+                    prefijo="$(ipcalc -p "$ip" | sed 's/PREFIX=//')"
+                    subnet_option="--subnet=$direccion_red/$prefijo"
+
+                    ip=$(echo "$ip" | sed 's/\/[0-9]*//')
+                    ip_option="--ip $ip"
+                else
+                    destruir_entorno > /dev/null 2>&1
+                    error "Debe proporcionar una IP válida en .contenedores[$i].redes[$j]"
+                fi
+            fi
+            
             # Solo se crea la red si no existe previamente
-            docker network inspect "$red" > /dev/null 2>&1 || docker network create "$red"
-
-            docker network connect "$red" "$nombre"
+            docker network inspect "$red" > /dev/null 2>&1 || docker network create "$subnet_option" "$red"
+            docker network connect $ip_option "$red" "$nombre" || error "No se ha podido conectar el contenedor $nombre"
 
             j=$((j+1))
         done

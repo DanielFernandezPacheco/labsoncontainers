@@ -36,6 +36,7 @@ run_container() {
         --mount type=bind,source="$(pwd)",target=/mnt/shared \
         --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \
         --mount type=bind,source="${Cookiefile}",target=/cookie \
+        --label background="$background" \
 	"$imagen"
 }
 
@@ -83,9 +84,11 @@ uso() {
 mostrar_informacion_contenedor() {
     _nombre="$1"
     _imagen=$(docker inspect --format='{{.Config.Image}}' "$_nombre")
+    _background=$(docker inspect --format='{{.Config.Labels.background}}' "$_nombre")
 
     echo "Nombre del contenedor: $_nombre"
     echo "Imagen: $_imagen"
+    echo "Background: $_background"
     for _red in $(docker inspect --format='{{range $key, $value := .NetworkSettings.Networks}}{{ println $key}}{{end}}' $_nombre | sed '/^$/d'); do
         _ip=$(docker container inspect -f '{{ (index .NetworkSettings.Networks "'"$_red"'").IPAddress }}' $_nombre)
         echo "Red: $_red IP: $_ip"
@@ -109,14 +112,23 @@ destruir_entorno() {
 lanzar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
         echo "Lanzando de nuevo los contenedores de $nombre_practica..."
+        listaContenedoresTerminal=""
         for nombre in $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}'); do
             docker container start "$nombre" > /dev/null || error "No se ha podido lanzar el contenedor $nombre"
+
+            if [ "$(docker inspect -f '{{.Config.Labels.background}}' "$nombre" )" = "false" ]; then
+                if [ -z "$listaContenedoresTerminal" ]; then
+                    listaContenedoresTerminal="$nombre"
+                else
+                    listaContenedoresTerminal="$listaContenedoresTerminal $nombre"
+                fi
+            fi
 
             mostrar_informacion_contenedor "$nombre"
         done
 
         # Se abren las terminales
-        crear_terminal $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}')
+        crear_terminal $listaContenedoresTerminal
 
         echo "Contenedores lanzados exitosamente"
     else
@@ -182,6 +194,7 @@ crear_entorno() {
 
         background=$(yq e '.contenedores['"$i"'].background' "$fichero")
         if [ "$background" != true ]; then
+            background=false
             if [ -z "$listaContenedoresTerminal" ]; then
                 listaContenedoresTerminal="$nombre"
             else

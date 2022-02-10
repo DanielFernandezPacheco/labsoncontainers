@@ -80,12 +80,25 @@ uso() {
     echo "-h: Muestra este mensaje de ayuda"
 }
 
+mostrar_informacion_contenedor() {
+    _nombre="$1"
+    _imagen=$(docker inspect --format='{{.Config.Image}}' "$_nombre")
+
+    echo "Nombre del contenedor: $_nombre"
+    echo "Imagen: $_imagen"
+    for _red in $(docker inspect --format='{{range $key, $value := .NetworkSettings.Networks}}{{ println $key}}{{end}}' $_nombre | sed '/^$/d'); do
+        _ip=$(docker container inspect -f '{{ (index .NetworkSettings.Networks "'"$_red"'").IPAddress }}' $_nombre)
+        echo "Red: $_red IP: $_ip"
+    done
+    echo ""
+}
+
 destruir_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Eliminando los contenedores y redes de $nombre_practica"
-        docker container rm -f $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido borrar el entorno $nombre_practica"
+        echo "Eliminando los contenedores y redes de $nombre_practica..."
+        docker container rm -f $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') > /dev/null || error "No se ha podido borrar el entorno $nombre_practica"
         if [ "$(docker network ls -q --filter name="$nombre_practica")" ]; then
-            docker network rm $(docker network ls -q --filter name="$nombre_practica") || error "No se ha podido borrar el entorno $nombre_practica"
+            docker network rm $(docker network ls -q --filter name="$nombre_practica") > /dev/null || error "No se ha podido borrar el entorno $nombre_practica"
         fi
         echo "Contenedores y redes eliminados exitosamente"
     else
@@ -95,8 +108,12 @@ destruir_entorno() {
 
 lanzar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Lanzando de nuevo los contenedores de $nombre_practica"
-        docker container start $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido lanzar el entorno $nombre_practica"
+        echo "Lanzando de nuevo los contenedores de $nombre_practica..."
+        for nombre in $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}'); do
+            docker container start "$nombre" > /dev/null || error "No se ha podido lanzar el contenedor $nombre"
+
+            mostrar_informacion_contenedor "$nombre"
+        done
 
         # Se abren las terminales
         crear_terminal $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}')
@@ -109,8 +126,8 @@ lanzar_entorno() {
 
 parar_entorno() {
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
-        echo "Deteniendo los contenedores de $nombre_practica"
-        docker container stop $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido parar el entorno $nombre_practica"
+        echo "Deteniendo los contenedores de $nombre_practica..."
+        docker container stop $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') > /dev/null || error "No se ha podido parar el entorno $nombre_practica"
         echo "Contenedores detenidos exitosamente"
     else
         error "No existen contenedores asociados a $nombre_practica"
@@ -135,6 +152,7 @@ crear_entorno() {
     # Si ya existen contenedores asociados a la práctica, se destruyen previamente
     if [ "$(docker ps -aq -f name="$nombre_practica")" ]; then
         destruir_entorno
+        echo "" # Se imprime esta línea vacía para dejar más bonita la salida
     fi
 
     numero_contenedores=$(yq e '.contenedores | length' "$fichero") 
@@ -175,7 +193,7 @@ crear_entorno() {
         crear_cookie || error "Error al crear la cookie para $nombre"
         
         # Se crea el contenedor y se le desconecta del adaptador bridge
-        run_container || error "Error en la creación del contenedor $nombre"
+        run_container > /dev/null || error "Error en la creación del contenedor $nombre"
         docker network disconnect bridge "$nombre"
 
         numero_redes=$(yq e '.contenedores['"$i"'].redes | length' "$fichero") 
@@ -214,16 +232,21 @@ crear_entorno() {
             fi
             
             # Solo se crea la red si no existe previamente
-            docker network inspect "$red" > /dev/null 2>&1 || docker network create "$subnet_option" "$red"
+            docker network inspect "$red" > /dev/null 2>&1 || docker network create $subnet_option "$red" > /dev/null
             docker network connect $ip_option "$red" "$nombre" || error "No se ha podido conectar el contenedor $nombre"
 
             j=$((j+1))
         done
+
+        mostrar_informacion_contenedor "$nombre"
+
         i=$((i+1))
     done
 
     # Si todos los contenedores se han creado exitosamente, se abren las terminales
     crear_terminal $listaContenedoresTerminal
+
+    echo "Contenedores creados exitosamente"
 }
 
 # Controla que el comando se ejecute solo con un flag

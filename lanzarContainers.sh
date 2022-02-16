@@ -81,6 +81,11 @@ uso() {
     echo "-h: Muestra este mensaje de ayuda"
 }
 
+abortar_creacion() {
+    destruir_entorno > /dev/null 2>&1
+    error "$1"
+}
+
 mostrar_informacion_contenedor() {
     _nombre="$1"
     _imagen=$(docker inspect --format='{{.Config.Image}}' "$_nombre")
@@ -105,7 +110,7 @@ destruir_entorno() {
         fi
         echo "Contenedores y redes eliminados exitosamente"
     else
-        error "No existen contenedores asociados a $nombre_practica"
+        echo "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
@@ -132,7 +137,7 @@ lanzar_entorno() {
 
         echo "Contenedores lanzados exitosamente"
     else
-        error "No existen contenedores asociados a $nombre_practica"
+        echo "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
@@ -142,7 +147,7 @@ parar_entorno() {
         docker container stop $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') > /dev/null || error "No se ha podido parar el entorno $nombre_practica"
         echo "Contenedores detenidos exitosamente"
     else
-        error "No existen contenedores asociados a $nombre_practica"
+        echo "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
@@ -151,7 +156,7 @@ inspeccionar_entorno() {
         echo "Información de los contenedores de $nombre_practica"
         docker container inspect $(docker ps -a --filter name="$nombre_practica" --format '{{.Names}}') || error "No se ha podido parar el entorno $nombre_practica"
     else
-        error "No existen contenedores asociados a $nombre_practica"
+        echo "No existen contenedores asociados a $nombre_practica"
     fi    
 }
 
@@ -179,8 +184,7 @@ crear_entorno() {
     do
         nombre_contenedor=$(yq e '.contenedores['"$i"'].nombre' "$fichero")
         if [ "$nombre_contenedor" = "null" ]; then
-            destruir_entorno
-            error "Se debe especificar el campo nombre en contenedores[$i]"
+            abortar_creacion "Se debe especificar el campo nombre en contenedores[$i]"
         fi
 
         # Se concatena el nombre de la practica con el nombre del contenedor para poder hacer operaciones asociadas a entornos de prácticas
@@ -188,8 +192,7 @@ crear_entorno() {
 
         imagen=$(yq e '.contenedores['"$i"'].imagen' "$fichero")
         if [ "$imagen" = "null" ]; then
-            destruir_entorno
-            error "Se debe especificar el campo imagen en contenedores[$i]"
+            abortar_creacion "Se debe especificar el campo imagen en contenedores[$i]"
         fi
 
         background=$(yq e '.contenedores['"$i"'].background' "$fichero")
@@ -203,16 +206,15 @@ crear_entorno() {
         fi
 
         # Se crea la cookie de X11 para usar aplicaciones con GUI
-        crear_cookie || error "Error al crear la cookie para $nombre"
+        crear_cookie || abortar_creacion "Error al crear la cookie para $nombre"
         
         # Se crea el contenedor y se le desconecta del adaptador bridge
-        run_container > /dev/null || error "Error en la creación del contenedor $nombre"
-        docker network disconnect bridge "$nombre"
+        run_container > /dev/null || abortar_creacion "Error en la creación del contenedor $nombre"
+        docker network disconnect bridge "$nombre" || abortar_creacion "Error en la creación del contenedor $nombre"
 
         numero_redes=$(yq e '.contenedores['"$i"'].redes | length' "$fichero") 
         if [ "$numero_redes" = 0 ]; then
-            destruir_entorno
-            error "Se debe especificar el campo redes en contenedores[$i]"
+            abortar_creacion "Se debe especificar el campo redes en contenedores[$i]"
         fi
 
         j=0
@@ -220,8 +222,7 @@ crear_entorno() {
         do
             red_fichero=$(yq e '.contenedores['"$i"'].redes['"$j"'].nombre' "$fichero")
             if [ "$red_fichero" = "null" ]; then
-                destruir_entorno
-                error "Se debe especificar el campo nombre en contenedores[$i].redes[$j]"
+                abortar_creacion "Se debe especificar el campo nombre en contenedores[$i].redes[$j]"
             fi
             red="${nombre_practica}_red_${red_fichero}"
 
@@ -239,14 +240,15 @@ crear_entorno() {
                     ip=$(echo "$ip" | sed 's/\/[0-9]*//')
                     ip_option="--ip $ip"
                 else
-                    destruir_entorno > /dev/null 2>&1
-                    error "Debe proporcionar una IP válida en .contenedores[$i].redes[$j]"
+                    abortar_creacion "Debe proporcionar una IP válida en .contenedores[$i].redes[$j]"
                 fi
             fi
             
             # Solo se crea la red si no existe previamente
-            docker network inspect "$red" > /dev/null 2>&1 || docker network create $subnet_option "$red" > /dev/null
-            docker network connect $ip_option "$red" "$nombre" || error "No se ha podido conectar el contenedor $nombre"
+            docker network inspect "$red" > /dev/null 2>&1 || docker network create $subnet_option "$red" > /dev/null || \
+              abortar_creacion "No se ha podido crear la red $red"
+            
+            docker network connect $ip_option "$red" "$nombre" || abortar_creacion "No se ha podido conectar el contenedor $nombre"
 
             j=$((j+1))
         done
@@ -257,7 +259,9 @@ crear_entorno() {
     done
 
     # Si todos los contenedores se han creado exitosamente, se abren las terminales
-    crear_terminal $listaContenedoresTerminal
+    if [ -n "$listaContenedoresTerminal" ]; then
+        crear_terminal $listaContenedoresTerminal
+    fi
 
     echo "Contenedores creados exitosamente"
 }

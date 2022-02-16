@@ -1,4 +1,4 @@
-nombre_practica: practica0
+nombre_practica: ejemplo
 contenedores:
   - nombre: vm1
     imagen: rys

@@ -1,0 +1,24 @@
+nombre_practica: practica0
+contenedores:
+  - nombre: host1
+    imagen: rys
+    redes:
+    - nombre: 1
+  - nombre: host2
+    imagen: rys
+    redes:
+    - nombre: 1
+  - nombre: router1
+    imagen: rys
+    redes:
+    - nombre: 1
+    - nombre: 2
+  - nombre: router2
+    imagen: rys
+    redes:
+    - nombre: 2
+    - nombre: 3
+  - nombre: servidor
+    imagen: rys
+    redes:
+    - nombre: 3

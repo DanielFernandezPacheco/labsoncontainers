@@ -352,6 +352,11 @@ while getopts ":c:l:r:p:i:h" o; do
 done
 shift $((OPTIND-1))
 
+# Quitamos la extensión en caso de que exista
+if [ -n "$nombre_practica" ]; then
+    nombre_practica=${nombre_practica%.*}
+fi
+
 case "$comando" in
     crear)
         crear_entorno && exit

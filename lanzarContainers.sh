@@ -266,6 +266,18 @@ crear_entorno() {
     echo "Contenedores creados exitosamente"
 }
 
+if [ ! "$(which yq)" ]; then
+    error "yq debe estar instalado en el sistema para utilizar este script"
+fi
+
+if [ ! "$(which xauth)" ]; then
+    error "xauth debe estar instalado en el sistema para utilizar este script"
+fi
+
+if [ ! "$(which docker)" ]; then
+    error "docker debe estar instalado en el sistema para utilizar este script"
+fi
+
 # Controla que el comando se ejecute solo con un flag
 opcion=false
 

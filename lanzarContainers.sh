@@ -266,6 +266,18 @@ crear_entorno() {
     echo "Contenedores creados exitosamente"
 }
 
+if [ ! "$(which yq)" ]; then
+    error "yq debe estar instalado en el sistema para utilizar este script"
+fi
+
+if [ ! "$(which xauth)" ]; then
+    error "xauth debe estar instalado en el sistema para utilizar este script"
+fi
+
+if [ ! "$(which docker)" ]; then
+    error "docker debe estar instalado en el sistema para utilizar este script"
+fi
+
 # Controla que el comando se ejecute solo con un flag
 opcion=false
 
@@ -339,6 +351,11 @@ while getopts ":c:l:r:p:i:h" o; do
     esac
 done
 shift $((OPTIND-1))
+
+# Quitamos la extensión en caso de que exista
+if [ -n "$nombre_practica" ]; then
+    nombre_practica=${nombre_practica%.*}
+fi
 
 case "$comando" in
     crear)

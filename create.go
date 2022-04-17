@@ -24,11 +24,11 @@ import (
 //
 // First, it destroy any other lab enviroment with the same name using DestroyEnviroment, then
 // it creates all the desired networks and finally, it creates all the containers. On success, it
-// returns a list of the created containers IDs.
+// returns a map of the created containers names and their IDs.
 //
 // Note that, during container creation, it will not be pulled any image, so the desired images will have
 // to be previously built or pulled.
-func CreateEnviroment(labEnv *LabEnviroment) ([]string, error) {
+func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
 	if labEnv.LabName == "" {
 		return nil, fmt.Errorf("error while creating enviroment: lab name cannot be empty")
 	}
@@ -196,17 +196,17 @@ func createX11Cookie(containerName string, labName string) (string, error) {
 }
 
 // createContainers concurrently creates (using errgroups) all the specified containers.
-func createContainers(containers * []LabContainer, labName string) ([]string, error) {
-	containerIds := make([]string, len(*containers))
+func createContainers(containers * []LabContainer, labName string) (map[string]string, error) {
+	containerIds := make(map[string]string)
 
 	g, ctx := errgroup.WithContext(context.Background())
 
-	for i, container := range *containers {
-		i, container := i, container
+	for _, container := range *containers {
+		container := container
 		g.Go(func() error {
 			containerId, err := createContainer(ctx, &container, labName)
 			if err == nil {
-				containerIds[i] = containerId
+				containerIds[container.Name] = containerId
 				return nil
 			} else {
 				return fmt.Errorf("error while creating container %v: %w", container.Name, err)

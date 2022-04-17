@@ -48,7 +48,7 @@ func main() {
 	} else if *inspect {
 		// TODO
 	} else if *stop {
-		// TODO
+		stopLabEnviroment(flag.Arg(0))
 	} else if *destroy {
 		destroyLabEnviroment(flag.Arg(0))
 	} else {

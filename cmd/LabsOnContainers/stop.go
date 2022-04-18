@@ -22,9 +22,8 @@ func stopLabEnviroment(labName string) {
 			fmt.Println(err)
 			os.Exit(1)
    		}
-		fmt.Println("Contenedores y redes detenidos exitosamente")		
+		fmt.Println("Contenedores detenidos exitosamente")		
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}
-
 }

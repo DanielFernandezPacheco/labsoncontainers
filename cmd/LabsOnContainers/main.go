@@ -44,7 +44,7 @@ func main() {
 	if *create {
 		createLabEnviroment(flag.Arg(0))
 	} else if *start {
-		// TODO
+		startLabEnviroment(flag.Arg(0))
 	} else if *inspect {
 		// TODO
 	} else if *stop {

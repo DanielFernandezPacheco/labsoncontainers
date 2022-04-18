@@ -11,12 +11,12 @@ import (
 
 // StopEnviroment stops all containers of the provided lab enviroment.
 func StopEnviroment(labName string) error {
-	containersIds, err := GetEnviromentContainers(labName)
+	containers, err := GetEnviromentContainers(labName)
 	if err != nil {
 		return fmt.Errorf("error while stopping enviroment: %w", err)
 	}
 
-	err = stopContainers(containersIds)
+	err = stopContainers(containers)
 	if err != nil {
 		return fmt.Errorf("error while stopping enviroment: %w", err)
 	}
@@ -25,11 +25,11 @@ func StopEnviroment(labName string) error {
 }
 
 // stopsContainers concurrently stops (using errgroups) all the specified containers.
-func stopContainers(containersIds []string) error {
+func stopContainers(containers []LabContainer) error {
 	g, ctx := errgroup.WithContext(context.Background())
 
-	for _, id := range containersIds {
-		id := id
+	for _, container := range containers {
+		id := container.ID
 		g.Go(func() error {
 			return stopContainer(ctx, id)
 		})

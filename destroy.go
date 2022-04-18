@@ -20,12 +20,12 @@ func DestroyEnviroment(labName string) error {
 		return fmt.Errorf("error while destroying enviroment: %w", err)
 	}
 
-	containersIds, err := GetEnviromentContainers(labName)
+	containers, err := GetEnviromentContainers(labName)
 	if err != nil {
 		return fmt.Errorf("error while destroying enviroment: %w", err)
 	}
 
-	err = destroyContainers(containersIds)
+	err = destroyContainers(containers)
 	if err != nil {
 		return fmt.Errorf("error while destroying enviroment: %w", err)
 	}
@@ -57,11 +57,11 @@ func destroyCookieDir(labName string) error {
 }
 
 // destroyContainers concurrently removes (using errgroups) all the specified containers.
-func destroyContainers(containersIds []string) error {
+func destroyContainers(containers []LabContainer) error {
 	g, ctx := errgroup.WithContext(context.Background())
 
-	for _, id := range containersIds {
-		id := id
+	for _, container := range containers {
+		id := container.ID
 		g.Go(func() error {
 			return destroyContainer(ctx, id)
 		})

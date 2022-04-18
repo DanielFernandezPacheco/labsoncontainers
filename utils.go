@@ -3,24 +3,22 @@ package labsoncontainers
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 )
 
-// GetEnviromentContainers gets all containers IDs (including non-running containers) that belong to the provided lab enviroment.
-func GetEnviromentContainers(labName string) ([]string, error) {
-	var containersIds []string
-
+// GetEnviromentContainers gets all containers info (including non-running containers) that belong to the provided lab enviroment.
+func GetEnviromentContainers(labName string) ([]LabContainer, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
 	}
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		Quiet: true,
+	dockerContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		All: true,
 		Filters: filters.NewArgs(
 			filters.Arg("name", labName),
@@ -30,11 +28,29 @@ func GetEnviromentContainers(labName string) ([]string, error) {
 		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
 	}
 
-	for _, container := range containers {
-		containersIds = append(containersIds, container.ID)
-	}
+	labContainers := make([]LabContainer, len(dockerContainers))
 
-	return containersIds, nil
+	i := 0
+	for _, container := range dockerContainers {
+		labContainers[i].Name = container.Names[0][1:] // Leading '/' must be removed
+		labContainers[i].Image = container.Image
+		labContainers[i].ID = container.ID
+
+		labContainers[i].Background, err = strconv.ParseBool(container.Labels["background"])
+		if err != nil {
+			return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+		}
+
+		labContainers[i].Networks = make([]LabNetwork, len(container.NetworkSettings.Networks))
+		j := 0
+		for name, network := range container.NetworkSettings.Networks {
+			labContainers[i].Networks[j].Name = name
+			labContainers[i].Networks[j].IP = network.IPAddress
+			j++
+		}
+		i++
+	}
+	return labContainers, nil
 }
 
 // GetEnviromentNetworks gets all networks IDs that belong to the provided lab enviroment.

@@ -29,6 +29,7 @@ type LabContainer struct {
 	Image      string       `yaml:"imagen"`
 	Networks   []LabNetwork `yaml:"redes"`
 	Background bool         `yaml:"background,omitempty"`
+	ID         string
 }
 
 // LabNetwork represents the structure of a lab network. It is composed by its name and, optionally,

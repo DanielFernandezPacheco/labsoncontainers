@@ -28,19 +28,21 @@ func createLabEnviroment(filePath string) {
         os.Exit(1)
     }
 
-    containersIds, err := labsoncontainers.CreateEnviroment(&labEnv)
+    _, err = labsoncontainers.CreateEnviroment(&labEnv)
     if err != nil {
-        fmt.Printf("error on labsoncontainers: %v\n", err)
+        fmt.Println(err)
         os.Exit(1)
     }
 
-    var foregroundContainersIds []string
-    for _, container := range labEnv.Containers {
-        if !container.Background {
-            foregroundContainersIds = append(foregroundContainersIds, containersIds[container.Name])
-        }
-    }    
-    err = createTerminalWindows(foregroundContainersIds) 
+    containers, err := labsoncontainers.GetEnviromentContainers(labEnv.LabName)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
+    printContainersInfo(containers)
+
+    err = createTerminalWindows(containers)
     if err != nil {
         fmt.Printf("error while creating terminal windows: %v\n", err)
         destroyErr := labsoncontainers.DestroyEnviroment(labEnv.LabName)

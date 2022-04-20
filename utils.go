@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Mario Román Dono <mario.romandono@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 package labsoncontainers
 
 import (

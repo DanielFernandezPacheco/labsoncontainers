@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Mario Román Dono <mario.romandono@gmail.com>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Package labsoncontainers allows to create and manage lab enviroments using Docker Engine API. These enviroments are designed
 // to practice Computer Science exercises: monitor network traffic, create VPNs, perform mock cyberattacks...
 //

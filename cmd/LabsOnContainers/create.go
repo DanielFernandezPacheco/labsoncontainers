@@ -41,6 +41,10 @@ func createLabEnviroment(filePath string) {
     containers, err := labsoncontainers.GetEnviromentContainers(labEnv.LabName)
     if err != nil {
         fmt.Println(err)
+        destroyErr := labsoncontainers.DestroyEnviroment(labEnv.LabName)
+        if destroyErr != nil {
+            fmt.Printf("error on labsoncontainers: %v\n", err)
+        }
         os.Exit(1)
     }
 

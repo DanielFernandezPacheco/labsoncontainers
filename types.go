@@ -26,7 +26,7 @@ type LabEnviroment struct {
 }
 
 // LabContainer represents the structure of a lab container. It is composed by its name, the image name
-// the container will use, a list of LabNetwork and the background field: if it is set to false, a terminal
+// the container will use, a list of LabNetwork and the background field: if it is set to true, a terminal
 // window will not be created for interacting with the container.
 type LabContainer struct {
 	Name       string       `yaml:"nombre"`

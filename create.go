@@ -57,7 +57,7 @@ func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
 		return nil, createErr
 	}
 
-	containerIds, err := createContainers(&labEnv.Containers, labEnv.LabName)
+	containerIds, err := createContainers(labEnv.Containers, labEnv.LabName)
 	if err != nil {
 		createErr := fmt.Errorf("error while creating enviroment: %w", err)
 		destroyErr := DestroyEnviroment(labEnv.LabName)
@@ -210,12 +210,12 @@ func createX11Cookie(containerName string, labName string) (string, error) {
 }
 
 // createContainers concurrently creates (using errgroups) all the specified containers.
-func createContainers(containers * []LabContainer, labName string) (map[string]string, error) {
+func createContainers(containers []LabContainer, labName string) (map[string]string, error) {
 	containerIds := make(map[string]string)
 
 	g, ctx := errgroup.WithContext(context.Background())
 
-	for _, container := range *containers {
+	for _, container := range containers {
 		container := container
 		g.Go(func() error {
 			containerId, err := createContainer(ctx, &container, labName)

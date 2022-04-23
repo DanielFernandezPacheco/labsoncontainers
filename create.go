@@ -70,10 +70,9 @@ func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
 	return containerIds, nil
 }
 
-// parseNetworks traverses the LabEnviroment struct and returns a map with the non-repeated networks
-// of the enviroment and, if specified, its IP address. In case that two or more networks have the same name
-// but their IP address does not belong to the same subnet, it will use the first network address.
-func parseNetworks(labEnv *LabEnviroment) (map[string]string, error) {
+// parseNetworks traverses the LabEnviroment struct and returns a slice of LabNetwork. In case that two or more networks
+// have the same name but their IP address does not belong to the same subnet, it will use the first network address.
+func parseNetworks(labEnv *LabEnviroment) ([]LabNetwork, error) {
 	uniqueNetworks := make(map[string]string)
 
 	for _, container := range labEnv.Containers {
@@ -93,17 +92,28 @@ func parseNetworks(labEnv *LabEnviroment) (map[string]string, error) {
 			}
 		}
 	}
-	return uniqueNetworks, nil
+
+	var labNetworkSlice []LabNetwork
+
+	for name, ip := range uniqueNetworks {
+		network := LabNetwork{
+			Name: name,
+			IP: ip,
+		}
+		labNetworkSlice = append(labNetworkSlice, network)
+	}
+
+	return labNetworkSlice, nil
 }
 
 // createNetworks concurrently creates (using errgroups) all the specified networks.
-func createNetworks(networks map[string]string) error {
+func createNetworks(networks []LabNetwork) error {
 	g, ctx := errgroup.WithContext(context.Background())
 
-	for name, address := range networks {
-		name, address := name, address
+	for _, network := range networks {
+		network := network
 		g.Go(func() error {
-			return createNetwork(ctx, name, address)
+			return createNetwork(ctx, &network)
 		})
 	}
 
@@ -116,13 +126,13 @@ func createNetworks(networks map[string]string) error {
 
 // createNetwork creates the specified network. If address is not empty, it will be used 
 // as the network subnet address.
-func createNetwork(errGroupCtx context.Context, name string, address string) error {
+func createNetwork(errGroupCtx context.Context, labNetwork * LabNetwork) error {
 	var IPAM *network.IPAM
 
-	if address != "" {
+	if labNetwork.IP != "" {
 		IPAM = &network.IPAM{
 			Config: []network.IPAMConfig{
-				{Subnet: address},
+				{Subnet: labNetwork.IP},
 			},
 		}
 	}
@@ -130,15 +140,15 @@ func createNetwork(errGroupCtx context.Context, name string, address string) err
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("error while creating network %v: %v", name, err)
+		return fmt.Errorf("error while creating network %v: %v", labNetwork.Name, err)
 	}
 
-	_, err = cli.NetworkCreate(ctx, name, types.NetworkCreate{
+	_, err = cli.NetworkCreate(ctx, labNetwork.Name, types.NetworkCreate{
 		CheckDuplicate: true,
 		IPAM:           IPAM,
 	})
 	if err != nil {
-		return fmt.Errorf("error while creating network %v: %v", name, err)
+		return fmt.Errorf("error while creating network %v: %v", labNetwork.Name, err)
 	}
 
 	return nil

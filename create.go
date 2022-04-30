@@ -267,7 +267,7 @@ func createContainer(errGroupCtx context.Context, labContainer *LabContainer, la
 
 	displayEnvVar := "DISPLAY=" + os.Getenv("DISPLAY")
 	xauthorityEnvVar := "XAUTHORITY=" + cookiePath
-	currentDir, err := os.Getwd()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("%v", err)
 	}
@@ -292,7 +292,7 @@ func createContainer(errGroupCtx context.Context, labContainer *LabContainer, la
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: currentDir,
+				Source: homeDir,
 				Target: "/mnt/shared",
 			},
 			{

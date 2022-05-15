@@ -30,5 +30,4 @@ func destroyLabEnviroment(labName string) {
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}
-
 }

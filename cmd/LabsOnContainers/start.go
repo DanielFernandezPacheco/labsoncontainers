@@ -51,5 +51,4 @@ func startLabEnviroment(labName string) {
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}
-
 }

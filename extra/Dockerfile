@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:9
 # Para evitar que salgan mensajes de la configuración de Wireshark
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y firefox-esr wireshark iputils-ping iproute2 sudo nano

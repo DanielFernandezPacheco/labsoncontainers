@@ -30,7 +30,7 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 		if i > 0 {
 			args = append(args, "--tab", "-e")
 		}
-		args = append(args, "ash -c 'docker container attach " + foregroundContainersIds[i] + "; exec ash'")
+		args = append(args, "sh -c 'sudo docker container attach " + foregroundContainersIds[i] + "; exec sh'")
 	}
 
 	// GTK apps like xfce4-terminal won't run in setuid processes, so it is necessary
@@ -42,7 +42,7 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 			Gid: uint32(os.Getgid()),
 		},
 	}
-	err := cmd.Run()
+	err := cmd.Start()
 	if err != nil {
 		return err
 	}

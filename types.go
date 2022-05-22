@@ -15,7 +15,7 @@
 //
 // • Execution of GUI apps is possible using X11 untrusted cookies (https://github.com/mviereck/x11docker/wiki/X-authentication-with-cookies-and-xhost-("No-protocol-specified"-error)#untrusted-cookie-for-container-applications)
 //
-// • Current directory is bind mounted on all the lab containers
+// • Home directory is bind mounted on all the lab containers
 package labsoncontainers
 
 // LabEnviroment represents the structure of a lab enviroment. It is composed by the lab

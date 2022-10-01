@@ -238,7 +238,7 @@ func createContainers(containers []LabContainer, labName string) (map[string]str
 // createContainer creates the container. This function is equivalent to run:
 //
 // docker container run --name (labName_labContainer.Name) --hostname (labName_labContainer.Name) -d -it --cap-add=NET_ADMIN \
-// --init --env DISPLAY --env XAUTHORITY=cookiePath --mount type=bind,source="$(pwd)",target=/mnt/shared \
+// --init --env DISPLAY --env XAUTHORITY=cookiePath --mount type=bind,source=~,target=/mnt/shared \
 // --mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix \ --mount type=bind,source=cookiePath,target=cookiePath \
 // --label background=labContainer.Background labContainer.Image
 //

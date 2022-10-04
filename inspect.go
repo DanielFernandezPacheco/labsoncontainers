@@ -6,8 +6,8 @@ package labsoncontainers
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"golang.org/x/sync/errgroup"
 
@@ -36,7 +36,7 @@ func InspectEnvironment(labName string) (map[string][]byte, error) {
 			return nil, fmt.Errorf("error while inspecting environment: %w", err)
 		}
 		inspectJSONMap[container] = inspectJSON
-	}	
+	}
 
 	return inspectJSONMap, nil
 }

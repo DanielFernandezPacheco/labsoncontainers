@@ -98,7 +98,7 @@ func parseNetworks(labEnv *LabEnvironment) ([]LabNetwork, error) {
 	for name, ip := range uniqueNetworks {
 		network := LabNetwork{
 			Name: name,
-			IP: ip,
+			IP:   ip,
 		}
 		labNetworkSlice = append(labNetworkSlice, network)
 	}
@@ -124,9 +124,9 @@ func createNetworks(networks []LabNetwork) error {
 	return nil
 }
 
-// createNetwork creates the specified network. If address is not empty, it will be used 
+// createNetwork creates the specified network. If address is not empty, it will be used
 // as the network subnet address.
-func createNetwork(errGroupCtx context.Context, labNetwork * LabNetwork) error {
+func createNetwork(errGroupCtx context.Context, labNetwork *LabNetwork) error {
 	var IPAM *network.IPAM
 
 	if labNetwork.IP != "" {
@@ -173,7 +173,7 @@ func createX11Cookie(containerName string, labName string) (string, error) {
 	}
 	if err := os.Chown(cookiePath, os.Getuid(), os.Getgid()); err != nil {
 		return "", fmt.Errorf("%v", err)
-	}  
+	}
 
 	DISPLAY := os.Getenv("DISPLAY")
 	xauthCmd := exec.Command("xauth", "-f", cookiePath, "generate", DISPLAY, ".", "untrusted", "timeout", "3600")
@@ -183,12 +183,12 @@ func createX11Cookie(containerName string, labName string) (string, error) {
 	if err := os.Chown(cookiePath, os.Getuid(), os.Getgid()); err != nil {
 		return "", fmt.Errorf("%v", err)
 	}
-	
+
 	xauthCmd = exec.Command("xauth", "-f", cookiePath, "nlist", DISPLAY)
 	stdout, err := xauthCmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("%v", err)
-	}	
+	}
 
 	r, err := regexp.Compile("^....")
 	if err != nil {
@@ -196,7 +196,6 @@ func createX11Cookie(containerName string, labName string) (string, error) {
 	}
 	cookie := r.ReplaceAll(stdout, []byte("ffff"))
 
-	
 	xauthCmd = exec.Command("xauth", "-f", cookiePath, "nmerge", "-")
 	xauthCmd.Stdin = bytes.NewReader(cookie)
 	if err := xauthCmd.Run(); err != nil {
@@ -322,7 +321,7 @@ func createContainer(errGroupCtx context.Context, labContainer *LabContainer, la
 
 	if err := connectToNetworks(labContainer.Networks, containerID, labName, labContainer.Name); err != nil {
 		return "", fmt.Errorf("%w", err)
-	}	
+	}
 
 	return containerID, nil
 }
@@ -343,7 +342,7 @@ func connectToNetworks(networks []LabNetwork, containerID string, labName string
 	return nil
 }
 
-// connectToNetwork connects the container to the specified lab network. 
+// connectToNetwork connects the container to the specified lab network.
 // If the lab network has an IP address, the container will use that address (keep in mind that this function can return
 // an error if the IP address is not included in the network subnet).
 func connectToNetwork(errGroupCtx context.Context, containerID string, labNetwork *LabNetwork, labName string) error {

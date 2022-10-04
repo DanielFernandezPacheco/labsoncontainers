@@ -17,15 +17,15 @@ func startLabEnvironment(labName string) {
 	containers, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
-        os.Exit(1)
+		os.Exit(1)
 	}
 
 	if len(containers) > 0 {
 		err := labsoncontainers.StartEnvironment(labName)
-   		if err != nil {
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-   		}
+		}
 
 		// It is necessary to call again to GetEnvironmentContainers because we can only know
 		// the containers IPs after the restart
@@ -47,7 +47,7 @@ func startLabEnvironment(labName string) {
 			os.Exit(1)
 		}
 
-		fmt.Println("Contenedores lanzados exitosamente")		
+		fmt.Println("Contenedores lanzados exitosamente")
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}

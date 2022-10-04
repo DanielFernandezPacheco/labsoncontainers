@@ -17,16 +17,16 @@ func stopLabEnvironment(labName string) {
 	containersIds, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
-        os.Exit(1)
+		os.Exit(1)
 	}
 
 	if len(containersIds) > 0 {
 		err := labsoncontainers.StopEnvironment(labName)
-   		if err != nil {
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-   		}
-		fmt.Println("Contenedores detenidos exitosamente")		
+		}
+		fmt.Println("Contenedores detenidos exitosamente")
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}

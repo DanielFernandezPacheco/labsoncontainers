@@ -16,49 +16,49 @@ import (
 // createLabEnvironment parses a YAML file and, if it has a correct format,
 // it converts each element of the file and calls the LabsOnContainers API.
 func createLabEnvironment(filePath string) {
-    fmt.Println("Creando el entorno de laboratorio...")
+	fmt.Println("Creando el entorno de laboratorio...")
 
-    file, err := os.ReadFile(filePath)
-    if err != nil {
-        fmt.Printf("error while opening file: %v\n", err)
-        os.Exit(1)
-    }
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error while opening file: %v\n", err)
+		os.Exit(1)
+	}
 
-    var labEnv labsoncontainers.LabEnvironment
+	var labEnv labsoncontainers.LabEnvironment
 
-    err = yaml.Unmarshal(file, &labEnv)
-    if err != nil {
-        fmt.Printf("error while parsing yaml file: %v\n", err)
-        os.Exit(1)
-    }
+	err = yaml.Unmarshal(file, &labEnv)
+	if err != nil {
+		fmt.Printf("error while parsing yaml file: %v\n", err)
+		os.Exit(1)
+	}
 
-    _, err = labsoncontainers.CreateEnvironment(&labEnv)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
+	_, err = labsoncontainers.CreateEnvironment(&labEnv)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-    containers, err := labsoncontainers.GetEnvironmentContainers(labEnv.LabName)
-    if err != nil {
-        fmt.Println(err)
-        destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
-        if destroyErr != nil {
-            fmt.Printf("error on labsoncontainers: %v\n", err)
-        }
-        os.Exit(1)
-    }
+	containers, err := labsoncontainers.GetEnvironmentContainers(labEnv.LabName)
+	if err != nil {
+		fmt.Println(err)
+		destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
+		if destroyErr != nil {
+			fmt.Printf("error on labsoncontainers: %v\n", err)
+		}
+		os.Exit(1)
+	}
 
-    printContainersInfo(containers)
+	printContainersInfo(containers)
 
-    err = createTerminalWindows(containers)
-    if err != nil {
-        fmt.Printf("error while creating terminal windows: %v\n", err)
-        destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
-        if destroyErr != nil {
-            fmt.Printf("error on labsoncontainers: %v\n", err)
-        }
-        os.Exit(1)
-    }
+	err = createTerminalWindows(containers)
+	if err != nil {
+		fmt.Printf("error while creating terminal windows: %v\n", err)
+		destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
+		if destroyErr != nil {
+			fmt.Printf("error on labsoncontainers: %v\n", err)
+		}
+		os.Exit(1)
+	}
 
-    fmt.Println("Entorno creado exitosamente")
+	fmt.Println("Entorno creado exitosamente")
 }

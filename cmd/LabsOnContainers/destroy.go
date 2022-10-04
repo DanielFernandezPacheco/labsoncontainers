@@ -17,16 +17,16 @@ func destroyLabEnvironment(labName string) {
 	containersIds, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
-        os.Exit(1)
+		os.Exit(1)
 	}
 
 	if len(containersIds) > 0 {
 		err := labsoncontainers.DestroyEnvironment(labName)
-   		if err != nil {
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-   		}
-		fmt.Println("Contenedores y redes eliminados exitosamente")		
+		}
+		fmt.Println("Contenedores y redes eliminados exitosamente")
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}

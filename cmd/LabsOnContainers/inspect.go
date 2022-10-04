@@ -11,28 +11,28 @@ import (
 	"github.com/marioromandono/labsoncontainers"
 )
 
-// inspectLabEnvironment prints to the standard output the result of running inspect 
+// inspectLabEnvironment prints to the standard output the result of running inspect
 // on the lab environment containers, using LabsOnContainers API.
 func inspectLabEnvironment(labName string) {
 	fmt.Printf("Información de los contenedores de %v:\n", labName)
 	containersIds, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
-        os.Exit(1)
+		os.Exit(1)
 	}
 
 	if len(containersIds) > 0 {
 		inspectMap, err := labsoncontainers.InspectEnvironment(labName)
-   		if err != nil {
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-   		}
-		
+		}
+
 		for container, inspect := range inspectMap {
 			fmt.Println()
 			fmt.Printf("%v:\n", container)
 			fmt.Println(string(inspect))
-		}			
+		}
 	} else {
 		fmt.Println("No existen contenedores asociados a", labName)
 	}

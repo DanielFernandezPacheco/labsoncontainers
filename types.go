@@ -19,7 +19,7 @@
 package labsoncontainers
 
 // LabEnvironment represents the structure of a lab environment. It is composed by the lab
-// name and a list of LabContainer. 
+// name and a list of LabContainer.
 type LabEnvironment struct {
 	LabName    string         `yaml:"nombre_practica"`
 	Containers []LabContainer `yaml:"contenedores"`

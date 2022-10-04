@@ -5,17 +5,17 @@
 package main
 
 import (
-	"os/exec"
-	"os"
-	"syscall"
 	"fmt"
+	"os"
+	"os/exec"
+	"syscall"
 
 	"github.com/marioromandono/labsoncontainers"
 )
 
 // createTerminalWindows creates terminal windows that make possible the
 // interaction with the created containers. At the moment, this function
-// only works with XFCE terminal, and it should be refactored in order to 
+// only works with XFCE terminal, and it should be refactored in order to
 // support more terminal emulators.
 func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 	var foregroundContainersIds []string
@@ -30,7 +30,7 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 		if i > 0 {
 			args = append(args, "--tab", "-e")
 		}
-		args = append(args, "sh -c 'sudo docker container attach " + foregroundContainersIds[i] + "; exec sh'")
+		args = append(args, "sh -c 'sudo docker container attach "+foregroundContainersIds[i]+"; exec sh'")
 	}
 
 	// GTK apps like xfce4-terminal won't run in setuid processes, so it is necessary
@@ -38,7 +38,7 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 	cmd := exec.Command("xfce4-terminal", args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Credential: &syscall.Credential{
-			Uid: uint32(os.Getuid()), 
+			Uid: uint32(os.Getuid()),
 			Gid: uint32(os.Getgid()),
 		},
 	}
@@ -50,18 +50,18 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 	return nil
 }
 
-// printContainersInfo prints to the standard output the info of every container of 
+// printContainersInfo prints to the standard output the info of every container of
 // the lab environment, including its ID, name, image, background option and networks.
 func printContainersInfo(containers []labsoncontainers.LabContainer) {
-    for _, container := range containers {
-        fmt.Println("ID:", container.ID)
-        fmt.Println("Nombre:", container.Name)
-        fmt.Println("Imagen:", container.Image)
+	for _, container := range containers {
+		fmt.Println("ID:", container.ID)
+		fmt.Println("Nombre:", container.Name)
+		fmt.Println("Imagen:", container.Image)
 		fmt.Println("Background:", container.Background)
 
-        for _, network := range container.Networks {
-            fmt.Println("Red:", network.Name, "IP:", network.IP)
-        }
-        fmt.Println()
-    }
+		for _, network := range container.Networks {
+			fmt.Println("Red:", network.Name, "IP:", network.IP)
+		}
+		fmt.Println()
+	}
 }

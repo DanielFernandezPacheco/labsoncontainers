@@ -5,8 +5,8 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -20,9 +20,8 @@ func Usage() {
 func exitOnError(err string) {
 	fmt.Fprintf(flag.CommandLine.Output(), "%s\n", err)
 	flag.CommandLine.Usage()
-    os.Exit(1)
+	os.Exit(1)
 }
-
 
 func main() {
 	flag.CommandLine.Usage = Usage
@@ -35,9 +34,9 @@ func main() {
 
 	flag.Parse()
 
-    if flag.NFlag() < 1  {
+	if flag.NFlag() < 1 {
 		exitOnError("Debe proporcionar una opción válida")
-	} else if  flag.NFlag() > 1 {
+	} else if flag.NFlag() > 1 {
 		exitOnError("Debe proporcionar una sola opción")
 	} else if flag.NArg() < 1 {
 		exitOnError("Debe proporcionar un nombre de archivo o un nombre de entorno")
@@ -57,6 +56,6 @@ func main() {
 		destroyLabEnvironment(flag.Arg(0))
 	} else {
 		fmt.Fprintln(flag.CommandLine.Output(), "Opción no implementada")
-        os.Exit(1)
+		os.Exit(1)
 	}
 }

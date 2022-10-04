@@ -13,16 +13,16 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// StopEnviroment stops all containers of the provided lab enviroment.
-func StopEnviroment(labName string) error {
-	containers, err := GetEnviromentContainers(labName)
+// StopEnvironment stops all containers of the provided lab environment.
+func StopEnvironment(labName string) error {
+	containers, err := GetEnvironmentContainers(labName)
 	if err != nil {
-		return fmt.Errorf("error while stopping enviroment: %w", err)
+		return fmt.Errorf("error while stopping environment: %w", err)
 	}
 
 	err = stopContainers(containers)
 	if err != nil {
-		return fmt.Errorf("error while stopping enviroment: %w", err)
+		return fmt.Errorf("error while stopping environment: %w", err)
 	}
 
 	return nil

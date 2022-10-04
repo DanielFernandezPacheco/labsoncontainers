@@ -15,17 +15,17 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// InspectEnviroment returns low-level information of all the containers of the provided lab enviroment.
+// InspectEnvironment returns low-level information of all the containers of the provided lab environment.
 // On success, it returns a map of the containers' names as keys and their information as values.
-func InspectEnviroment(labName string) (map[string][]byte, error) {
-	containers, err := GetEnviromentContainers(labName)
+func InspectEnvironment(labName string) (map[string][]byte, error) {
+	containers, err := GetEnvironmentContainers(labName)
 	if err != nil {
-		return nil, fmt.Errorf("error while inspecting enviroment: %w", err)
+		return nil, fmt.Errorf("error while inspecting environment: %w", err)
 	}
 
 	inspectMap, err := inspectContainers(containers)
 	if err != nil {
-		return nil, fmt.Errorf("error while inspecting enviroment: %w", err)
+		return nil, fmt.Errorf("error while inspecting environment: %w", err)
 	}
 
 	inspectJSONMap := make(map[string][]byte, len(inspectMap))
@@ -33,7 +33,7 @@ func InspectEnviroment(labName string) (map[string][]byte, error) {
 	for container, inspectInfo := range inspectMap {
 		inspectJSON, err := json.MarshalIndent(inspectInfo, "", "    ")
 		if err != nil {
-			return nil, fmt.Errorf("error while inspecting enviroment: %w", err)
+			return nil, fmt.Errorf("error while inspecting environment: %w", err)
 		}
 		inspectJSONMap[container] = inspectJSON
 	}	

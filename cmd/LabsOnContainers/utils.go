@@ -51,7 +51,7 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 }
 
 // printContainersInfo prints to the standard output the info of every container of 
-// the lab enviroment, including its ID, name, image, background option and networks.
+// the lab environment, including its ID, name, image, background option and networks.
 func printContainersInfo(containers []labsoncontainers.LabContainer) {
     for _, container := range containers {
         fmt.Println("ID:", container.ID)

@@ -11,17 +11,17 @@ import (
 	"github.com/marioromandono/labsoncontainers"
 )
 
-// destroyLabEnviroment destroys the specified lab enviroment using LabsOnContainers API.
-func destroyLabEnviroment(labName string) {
+// destroyLabEnvironment destroys the specified lab environment using LabsOnContainers API.
+func destroyLabEnvironment(labName string) {
 	fmt.Printf("Eliminando los contenedores y redes de %v...\n", labName)
-	containersIds, err := labsoncontainers.GetEnviromentContainers(labName)
+	containersIds, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
         os.Exit(1)
 	}
 
 	if len(containersIds) > 0 {
-		err := labsoncontainers.DestroyEnviroment(labName)
+		err := labsoncontainers.DestroyEnvironment(labName)
    		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -16,38 +16,38 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// DestroyEnviroment removes all containers (including running containers),
-// networks and the X11 cookie directory of the provided lab enviroment.
-func DestroyEnviroment(labName string) error {
+// DestroyEnvironment removes all containers (including running containers),
+// networks and the X11 cookie directory of the provided lab environment.
+func DestroyEnvironment(labName string) error {
 	err := destroyCookieDir(labName)
 	if err != nil {
-		return fmt.Errorf("error while destroying enviroment: %w", err)
+		return fmt.Errorf("error while destroying environment: %w", err)
 	}
 
-	containers, err := GetEnviromentContainers(labName)
+	containers, err := GetEnvironmentContainers(labName)
 	if err != nil {
-		return fmt.Errorf("error while destroying enviroment: %w", err)
+		return fmt.Errorf("error while destroying environment: %w", err)
 	}
 
 	err = destroyContainers(containers)
 	if err != nil {
-		return fmt.Errorf("error while destroying enviroment: %w", err)
+		return fmt.Errorf("error while destroying environment: %w", err)
 	}
 
-	networksIds, err := GetEnviromentNetworks(labName)
+	networksIds, err := GetEnvironmentNetworks(labName)
 	if err != nil {
-		return fmt.Errorf("error while destroying enviroment: %w", err)
+		return fmt.Errorf("error while destroying environment: %w", err)
 	}
 
 	err = destroyNetworks(networksIds)
 	if err != nil {
-		return fmt.Errorf("error while destroying enviroment: %w", err)
+		return fmt.Errorf("error while destroying environment: %w", err)
 	}
 
 	return nil
 }
 
-// destroyCookieDir removes the X11 cookie directory of the provided lab enviroment.
+// destroyCookieDir removes the X11 cookie directory of the provided lab environment.
 // It does not return an error if the directory does not exist.
 func destroyCookieDir(labName string) error {
 	labCookieDir := cookieDir + labName + "/"

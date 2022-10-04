@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Package labsoncontainers allows to create and manage lab enviroments using Docker Engine API. These enviroments are designed
+// Package labsoncontainers allows to create and manage lab environments using Docker Engine API. These environments are designed
 // to practice Computer Science exercises: monitor network traffic, create VPNs, perform mock cyberattacks...
 //
 // The created containers have the following features:
@@ -18,9 +18,9 @@
 // • Home directory is bind mounted on all the lab containers
 package labsoncontainers
 
-// LabEnviroment represents the structure of a lab enviroment. It is composed by the lab
+// LabEnvironment represents the structure of a lab environment. It is composed by the lab
 // name and a list of LabContainer. 
-type LabEnviroment struct {
+type LabEnvironment struct {
 	LabName    string         `yaml:"nombre_practica"`
 	Containers []LabContainer `yaml:"contenedores"`
 }

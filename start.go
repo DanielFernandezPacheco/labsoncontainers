@@ -14,16 +14,16 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// StartEnviroment starts all the containers of the provided lab enviroment.
-func StartEnviroment(labName string) error {
-	containers, err := GetEnviromentContainers(labName)
+// StartEnvironment starts all the containers of the provided lab environment.
+func StartEnvironment(labName string) error {
+	containers, err := GetEnvironmentContainers(labName)
 	if err != nil {
-		return fmt.Errorf("error while starting enviroment: %w", err)
+		return fmt.Errorf("error while starting environment: %w", err)
 	}
 
 	err = startContainers(containers)
 	if err != nil {
-		return fmt.Errorf("error while starting enviroment: %w", err)
+		return fmt.Errorf("error while starting environment: %w", err)
 	}
 
 	return nil

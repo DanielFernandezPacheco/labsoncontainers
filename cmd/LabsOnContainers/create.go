@@ -13,9 +13,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// createLabEnviroment parses a YAML file and, if it has a correct format,
+// createLabEnvironment parses a YAML file and, if it has a correct format,
 // it converts each element of the file and calls the LabsOnContainers API.
-func createLabEnviroment(filePath string) {
+func createLabEnvironment(filePath string) {
     fmt.Println("Creando el entorno de laboratorio...")
 
     file, err := os.ReadFile(filePath)
@@ -24,7 +24,7 @@ func createLabEnviroment(filePath string) {
         os.Exit(1)
     }
 
-    var labEnv labsoncontainers.LabEnviroment
+    var labEnv labsoncontainers.LabEnvironment
 
     err = yaml.Unmarshal(file, &labEnv)
     if err != nil {
@@ -32,16 +32,16 @@ func createLabEnviroment(filePath string) {
         os.Exit(1)
     }
 
-    _, err = labsoncontainers.CreateEnviroment(&labEnv)
+    _, err = labsoncontainers.CreateEnvironment(&labEnv)
     if err != nil {
         fmt.Println(err)
         os.Exit(1)
     }
 
-    containers, err := labsoncontainers.GetEnviromentContainers(labEnv.LabName)
+    containers, err := labsoncontainers.GetEnvironmentContainers(labEnv.LabName)
     if err != nil {
         fmt.Println(err)
-        destroyErr := labsoncontainers.DestroyEnviroment(labEnv.LabName)
+        destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
         if destroyErr != nil {
             fmt.Printf("error on labsoncontainers: %v\n", err)
         }
@@ -53,7 +53,7 @@ func createLabEnviroment(filePath string) {
     err = createTerminalWindows(containers)
     if err != nil {
         fmt.Printf("error while creating terminal windows: %v\n", err)
-        destroyErr := labsoncontainers.DestroyEnviroment(labEnv.LabName)
+        destroyErr := labsoncontainers.DestroyEnvironment(labEnv.LabName)
         if destroyErr != nil {
             fmt.Printf("error on labsoncontainers: %v\n", err)
         }

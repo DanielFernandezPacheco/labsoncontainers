@@ -14,12 +14,12 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// GetEnviromentContainers gets all containers info (including non-running containers) that belong to the provided lab enviroment.
-func GetEnviromentContainers(labName string) ([]LabContainer, error) {
+// GetEnvironmentContainers gets all containers info (including non-running containers) that belong to the provided lab environment.
+func GetEnvironmentContainers(labName string) ([]LabContainer, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+		return nil, fmt.Errorf("error while getting environment containers: %v", err)
 	}
 
 	dockerContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{
@@ -29,7 +29,7 @@ func GetEnviromentContainers(labName string) ([]LabContainer, error) {
 		),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+		return nil, fmt.Errorf("error while getting environment containers: %v", err)
 	}
 
 	labContainers := make([]LabContainer, len(dockerContainers))
@@ -42,7 +42,7 @@ func GetEnviromentContainers(labName string) ([]LabContainer, error) {
 
 		labContainers[i].Background, err = strconv.ParseBool(container.Labels["background"])
 		if err != nil {
-			return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+			return nil, fmt.Errorf("error while getting environment containers: %v", err)
 		}
 
 		labContainers[i].Networks = make([]LabNetwork, len(container.NetworkSettings.Networks))
@@ -57,14 +57,14 @@ func GetEnviromentContainers(labName string) ([]LabContainer, error) {
 	return labContainers, nil
 }
 
-// GetEnviromentNetworks gets all networks IDs that belong to the provided lab enviroment.
-func GetEnviromentNetworks(labName string) ([]string, error) {
+// GetEnvironmentNetworks gets all networks IDs that belong to the provided lab environment.
+func GetEnvironmentNetworks(labName string) ([]string, error) {
 	var networksIds []string
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+		return nil, fmt.Errorf("error while getting environment containers: %v", err)
 	}
 
 	networks, err := cli.NetworkList(ctx, types.NetworkListOptions{
@@ -73,7 +73,7 @@ func GetEnviromentNetworks(labName string) ([]string, error) {
 		),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error while getting enviroment containers: %v", err)
+		return nil, fmt.Errorf("error while getting environment containers: %v", err)
 	}
 
 	for _, network := range networks {

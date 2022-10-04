@@ -24,33 +24,33 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// CreateEnviroment creates a lab enviroment using Docker Engine SDK and LabEnviroment type.
+// CreateEnvironment creates a lab environment using Docker Engine SDK and LabEnvironment type.
 //
-// First, it destroy any other lab enviroment with the same name using DestroyEnviroment, then
+// First, it destroy any other lab environment with the same name using DestroyEnvironment, then
 // it creates all the desired networks and finally, it creates all the containers. On success, it
 // returns a map of the created containers names and their IDs.
 //
 // Note that, during container creation, it will not be pulled any image, so the desired images will have
 // to be previously built or pulled.
-func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
+func CreateEnvironment(labEnv *LabEnvironment) (map[string]string, error) {
 	if labEnv.LabName == "" {
-		return nil, fmt.Errorf("error while creating enviroment: lab name cannot be empty")
+		return nil, fmt.Errorf("error while creating environment: lab name cannot be empty")
 	}
 
-	err := DestroyEnviroment(labEnv.LabName)
+	err := DestroyEnvironment(labEnv.LabName)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating enviroment: %w", err)
+		return nil, fmt.Errorf("error while creating environment: %w", err)
 	}
 
 	networks, err := parseNetworks(labEnv)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating enviroment: %w", err)
+		return nil, fmt.Errorf("error while creating environment: %w", err)
 	}
 
 	err = createNetworks(networks)
 	if err != nil {
-		createErr := fmt.Errorf("error while creating enviroment: %w", err)
-		destroyErr := DestroyEnviroment(labEnv.LabName)
+		createErr := fmt.Errorf("error while creating environment: %w", err)
+		destroyErr := DestroyEnvironment(labEnv.LabName)
 		if destroyErr != nil {
 			createErr = fmt.Errorf("%w, %v", createErr, destroyErr)
 		}
@@ -59,8 +59,8 @@ func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
 
 	containerIds, err := createContainers(labEnv.Containers, labEnv.LabName)
 	if err != nil {
-		createErr := fmt.Errorf("error while creating enviroment: %w", err)
-		destroyErr := DestroyEnviroment(labEnv.LabName)
+		createErr := fmt.Errorf("error while creating environment: %w", err)
+		destroyErr := DestroyEnvironment(labEnv.LabName)
 		if destroyErr != nil {
 			createErr = fmt.Errorf("%w, %v", createErr, destroyErr)
 		}
@@ -70,9 +70,9 @@ func CreateEnviroment(labEnv *LabEnviroment) (map[string]string, error) {
 	return containerIds, nil
 }
 
-// parseNetworks traverses the LabEnviroment struct and returns a slice of LabNetwork. In case that two or more networks
+// parseNetworks traverses the LabEnvironment struct and returns a slice of LabNetwork. In case that two or more networks
 // have the same name but their IP address does not belong to the same subnet, it will use the first network address.
-func parseNetworks(labEnv *LabEnviroment) ([]LabNetwork, error) {
+func parseNetworks(labEnv *LabEnvironment) ([]LabNetwork, error) {
 	uniqueNetworks := make(map[string]string)
 
 	for _, container := range labEnv.Containers {

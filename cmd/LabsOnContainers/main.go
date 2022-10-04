@@ -46,15 +46,15 @@ func main() {
 	}
 
 	if *create {
-		createLabEnviroment(flag.Arg(0))
+		createLabEnvironment(flag.Arg(0))
 	} else if *start {
-		startLabEnviroment(flag.Arg(0))
+		startLabEnvironment(flag.Arg(0))
 	} else if *inspect {
-		inspectLabEnviroment(flag.Arg(0))
+		inspectLabEnvironment(flag.Arg(0))
 	} else if *stop {
-		stopLabEnviroment(flag.Arg(0))
+		stopLabEnvironment(flag.Arg(0))
 	} else if *destroy {
-		destroyLabEnviroment(flag.Arg(0))
+		destroyLabEnvironment(flag.Arg(0))
 	} else {
 		fmt.Fprintln(flag.CommandLine.Output(), "Opción no implementada")
         os.Exit(1)

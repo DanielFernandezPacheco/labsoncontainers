@@ -11,17 +11,17 @@ import (
 	"github.com/marioromandono/labsoncontainers"
 )
 
-// stopLabEnviroment stops the containers of the specified lab enviroment using LabsOnContainers API.
-func stopLabEnviroment(labName string) {
+// stopLabEnvironment stops the containers of the specified lab environment using LabsOnContainers API.
+func stopLabEnvironment(labName string) {
 	fmt.Printf("Deteniendo los contenedores y redes de %v...\n", labName)
-	containersIds, err := labsoncontainers.GetEnviromentContainers(labName)
+	containersIds, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
         os.Exit(1)
 	}
 
 	if len(containersIds) > 0 {
-		err := labsoncontainers.StopEnviroment(labName)
+		err := labsoncontainers.StopEnvironment(labName)
    		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

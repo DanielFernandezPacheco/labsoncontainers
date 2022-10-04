@@ -11,25 +11,25 @@ import (
 	"github.com/marioromandono/labsoncontainers"
 )
 
-// startLabEnviroment starts the containers of the specified lab enviroment using LabsOnContainers API.
-func startLabEnviroment(labName string) {
+// startLabEnvironment starts the containers of the specified lab environment using LabsOnContainers API.
+func startLabEnvironment(labName string) {
 	fmt.Printf("Lanzando de nuevo los contenedores y redes de %v...\n", labName)
-	containers, err := labsoncontainers.GetEnviromentContainers(labName)
+	containers, err := labsoncontainers.GetEnvironmentContainers(labName)
 	if err != nil {
 		fmt.Println(err)
         os.Exit(1)
 	}
 
 	if len(containers) > 0 {
-		err := labsoncontainers.StartEnviroment(labName)
+		err := labsoncontainers.StartEnvironment(labName)
    		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
    		}
 
-		// It is necessary to call again to GetEnviromentContainers because we can only know
+		// It is necessary to call again to GetEnvironmentContainers because we can only know
 		// the containers IPs after the restart
-		containers, err = labsoncontainers.GetEnviromentContainers(labName)
+		containers, err = labsoncontainers.GetEnvironmentContainers(labName)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -40,7 +40,7 @@ func startLabEnviroment(labName string) {
 		err = createTerminalWindows(containers)
 		if err != nil {
 			fmt.Printf("error while creating terminal windows: %v\n", err)
-			stopErr := labsoncontainers.StopEnviroment(labName)
+			stopErr := labsoncontainers.StopEnvironment(labName)
 			if stopErr != nil {
 				fmt.Printf("error on labsoncontainers: %v\n", err)
 			}

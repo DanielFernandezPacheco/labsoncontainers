@@ -1,4 +1,7 @@
 # LabsOnContainers
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/marioromandono/labsoncontainers.svg)](https://pkg.go.dev/github.com/marioromandono/labsoncontainers) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/marioromandono/labsoncontainers)](https://goreportcard.com/report/github.com/marioromandono/labsoncontainers)
  
 **LabsOnContainers** is a tool written in Go that allows the automatic deployment and configuration of containerized lab environments, using Docker. These lab environments are designed to practice Computer Science exercises: monitor network traffic, create VPNs, perform mock cyberattacks...
 

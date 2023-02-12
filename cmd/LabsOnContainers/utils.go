@@ -11,6 +11,8 @@ import (
 	"syscall"
 
 	"github.com/marioromandono/labsoncontainers"
+
+	"os/user"
 )
 
 // createTerminalWindows creates terminal windows that make possible the
@@ -25,7 +27,23 @@ func createTerminalWindows(containers []labsoncontainers.LabContainer) error {
 		}
 	}
 
-	args := []string{"-e"}
+	currentUser, err_name := user.Current()
+        if err_name != nil {
+                fmt.Printf("error geting current user name: %v\n", err_name)
+                os.Exit(1)
+        }
+
+	currentUserUsername := currentUser.Username
+
+	args := []string{"--window", "-e"}
+
+	//Si se ejecuta como root no es necesario indicar que genere una nueva ventana puesto que ya lo hace. En caso de incluir
+	//la flag "-- window" se generará una venta de más
+	if currentUserUsername == "root" {
+		args = []string{"-e"}
+	}
+
+
 	for i := 0; i < len(foregroundContainersIds); i++ {
 		if i > 0 {
 			args = append(args, "--tab", "-e")

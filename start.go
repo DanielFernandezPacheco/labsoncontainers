@@ -36,7 +36,7 @@ func startContainers(containers []LabContainer) error {
 	for _, container := range containers {
 		id := container.ID
 		g.Go(func() error {
-			return startContainer(ctx, id)
+			return StartContainer(ctx, id)
 		})
 	}
 
@@ -48,7 +48,7 @@ func startContainers(containers []LabContainer) error {
 }
 
 // startContainer starts the specified container.
-func startContainer(errGroupCtx context.Context, containerID string) error {
+func StartContainer(errGroupCtx context.Context, containerID string) error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

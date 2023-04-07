@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+        integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+        crossorigin="anonymous"></script>
+    <script src="practica-config-panel.js"></script>
+    <title>LabsOnContainers</title>
+
+    <script>
+    // loads and shows the list of lab files
+    fetch("http://localhost:8080/yaml-files")
+        .then(response => response.json())
+        .then(data => {
+            var list = document.getElementById("config-list");
+            if (Array.isArray(data) && data.length > 0) {
+                data.forEach(function (file) {
+                    var item = createLabControlItem(file)
+                    list.appendChild(item);
+                });
+            }
+        })
+        .catch(error => {//TODO remove
+            console.log(error);
+            /*var list = document.getElementById("config-list");
+            var item1 = createLabControlItem("file1");
+            var item2 = createLabControlItem("file2");
+            var item3 = createLabControlItem("file3");
+            var item4 = createLabControlItem("file4");
+            var item5 = createLabControlItem("file5");
+            var item6 = createLabControlItem("file6");
+            list.appendChild(item1);
+            list.appendChild(item2);
+            list.appendChild(item3);
+            list.appendChild(item4);
+            list.appendChild(item5);
+            list.appendChild(item6);*/
+        });
+    </script>
+</head>
+
+<body style="background-color: #b2b7c4;">
+    <nav class="navbar navbar-default bg-dark">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" style="color:white" href="http://localhost:8080/">LabsOnContainers</a>
+            </div>
+    </nav>
+
+    <div id="new-config-container"></div>
+
+    <div id="jumbotron" class="jumbotron container text-center" style="width: fit-content; background-color: #e9e9e9;">
+        <h1 class="display-4">LabsOnContainers</h1>
+        <p class="lead">Puedes cargar una configuración ya existente o crear una nueva</p>
+        <hr class="my-4">
+        <h5>Mis configuraciones</h5>
+        <div class="d-flex justify-content-center">
+            <div id="config-list" class="list-group overflow-auto mt-3" style="max-height:300px;max-width:250px;">
+            </div>
+        </div>
+        <a href="./form-practica.html" class="btn btn-primary btn-lg mt-5">Nueva configuración</a>
+
+    </div>
+</body>
+
+</html>

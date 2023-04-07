@@ -35,7 +35,7 @@ func stopContainers(containers []LabContainer) error {
 	for _, container := range containers {
 		id := container.ID
 		g.Go(func() error {
-			return stopContainer(ctx, id)
+			return StopContainer(ctx, id)
 		})
 	}
 
@@ -46,15 +46,17 @@ func stopContainers(containers []LabContainer) error {
 	return nil
 }
 
-// stopContainer stops the specified container.
-func stopContainer(errGroupCtx context.Context, containerID string) error {
+// StopContainer stops the specified container.
+func StopContainer(errGroupCtx context.Context, containerID string) error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+
 	if err != nil {
 		return fmt.Errorf("error while destroying container %v: %v", containerID, err)
 	}
 
 	err = cli.ContainerStop(ctx, containerID, nil)
+
 	if err != nil {
 		return fmt.Errorf("error while destroying container %v: %v", containerID, err)
 	}

@@ -11,15 +11,15 @@ import (
 	"github.com/marioromandono/labsoncontainers"
 
 	"gopkg.in/yaml.v3"
-	
+
+	"errors"
 	"os/user"
 	"time"
-	"errors"
 )
 
 // createLabEnvironment parses a YAML file and, if it has a correct format,
 // it converts each element of the file and calls the LabsOnContainers API.
-func createLabEnvironment(filePath string) {
+func createLabEnvironment(filePath string) bool {
 	fmt.Println("Creando el entorno de laboratorio...")
 
 	file, err := os.ReadFile(filePath)
@@ -68,31 +68,29 @@ func createLabEnvironment(filePath string) {
 
 	//Comprobación de la existencia del directorio que almacenará el fichero de logs (en caso de no existir, se creará)
 	dir_path := "/var/log/labsoncontainers"
-	
+
 	if _, err := os.Stat(dir_path); errors.Is(err, os.ErrNotExist) {
 		err := os.Mkdir(dir_path, 0755)
 		if err != nil {
 			fmt.Printf("error creating log directory: %v\n", err)
-                	os.Exit(1)
+			os.Exit(1)
 		}
 	}
-
 
 	//Creación o apertura del fichero que almacenará los logs
 	f, err := os.OpenFile("/var/log/labsoncontainers/operations.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 
 	if err != nil {
-        	fmt.Printf("error creating/opening log file: %v\n", err)
-    		os.Exit(1)
+		fmt.Printf("error creating/opening log file: %v\n", err)
+		os.Exit(1)
 	}
-
 
 	//Obtención del nombre del usuario
 	currentUser, err := user.Current()
 	if err != nil {
-      		fmt.Printf("error geting current user name: %v\n", err)
+		fmt.Printf("error geting current user name: %v\n", err)
 		os.Exit(1)
-   	}
+	}
 
 	currentUserUsername := currentUser.Username
 
@@ -104,15 +102,15 @@ func createLabEnvironment(filePath string) {
 
 	//Escritura en el fichero
 	if _, err := f.Write([]byte(res_output)); err != nil {
-                fmt.Printf("error writing to log file: %v\n", err)
-                os.Exit(1)
-        }
-
+		fmt.Printf("error writing to log file: %v\n", err)
+		os.Exit(1)
+	}
 
 	//Cierre del fichero
 	if err := f.Close(); err != nil {
-                fmt.Printf("error closing log file: %v\n", err)
-                os.Exit(1)
-        }
+		fmt.Printf("error closing log file: %v\n", err)
+		os.Exit(1)
+	}
 
+	return true
 }

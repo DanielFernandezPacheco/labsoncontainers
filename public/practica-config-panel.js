@@ -5,25 +5,14 @@ function createLabButton(env, url, color, svg, description, reload = false) {
 
     button.innerHTML = svg;
     button.onclick = function () {
-        fetch("http://localhost:8080/" + url + "?env=" + env/*, {
-            method: 'GET',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            redirect: 'follow',
-            referrerPolicy: 'no-referrer',
-            timeout: reload ? 0 : 20000 // Establece el tiempo máximo de espera en 20 segundos
-        }*/)
+        fetch("http://localhost:8080/" + url + "?env=" + env)
             .then(response => {
                 if (reload && response.ok) {
                     window.location.replace("practica.html?env=" + env.replace(".yaml", ""));
                 }
             })
             .catch(error => {
-                console.error(error); // Maneja cualquier error que ocurra
+                console.error(error);
             });
     };
 

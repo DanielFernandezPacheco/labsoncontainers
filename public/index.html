@@ -28,22 +28,6 @@
                     list.appendChild(item);
                 });
             }
-        })
-        .catch(error => {//TODO remove
-            console.log(error);
-            /*var list = document.getElementById("config-list");
-            var item1 = createLabControlItem("file1");
-            var item2 = createLabControlItem("file2");
-            var item3 = createLabControlItem("file3");
-            var item4 = createLabControlItem("file4");
-            var item5 = createLabControlItem("file5");
-            var item6 = createLabControlItem("file6");
-            list.appendChild(item1);
-            list.appendChild(item2);
-            list.appendChild(item3);
-            list.appendChild(item4);
-            list.appendChild(item5);
-            list.appendChild(item6);*/
         });
     </script>
 </head>
@@ -64,7 +48,7 @@
         <hr class="my-4">
         <h5>Mis configuraciones</h5>
         <div class="d-flex justify-content-center">
-            <div id="config-list" class="list-group overflow-auto mt-3" style="max-height:300px;max-width:250px;">
+            <div id="config-list" class="list-group overflow-auto mt-3" style="max-height:300px;max-width:350px;">
             </div>
         </div>
         <a href="./form-practica.html" class="btn btn-primary btn-lg mt-5">Nueva configuración</a>

@@ -7,35 +7,20 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/marioromandono/labsoncontainers"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
-
-func Usage() {
-	fmt.Fprintf(flag.CommandLine.Output(), "Uso: %s [opción] [nombreLab | nombreLab.yaml]\n", os.Args[0])
-	fmt.Fprintln(flag.CommandLine.Output(), "")
-	fmt.Fprintln(flag.CommandLine.Output(), "Opciones:")
-	flag.PrintDefaults()
-}
-
-func exitOnError(err string) {
-	fmt.Fprintf(flag.CommandLine.Output(), "%s\n", err)
-	flag.CommandLine.Usage()
-	os.Exit(1)
-}
 
 type Red struct {
 	Nombre int
@@ -54,7 +39,7 @@ type Practica struct {
 }
 
 func handleForm(w http.ResponseWriter, r *http.Request) {
-	// parsear los valores del formulario
+	// parses the form
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form values", http.StatusBadRequest)
@@ -63,11 +48,10 @@ func handleForm(w http.ResponseWriter, r *http.Request) {
 	nombrePractica := r.FormValue("nombre-practica")
 	numContenedores, _ := strconv.Atoi(r.FormValue("num-contenedores"))
 
-	// crear una nueva estructura de Practica
 	var p Practica
 	p.NombrePractica = nombrePractica
 
-	// iterar sobre los contenedores y redes para agregarlos a la estructura
+	// iterates over the containers and networks to add them to the structure
 	for i := 0; i < numContenedores; i++ {
 		var c Contenedor
 		c.Nombre = r.FormValue(fmt.Sprintf("nombre-contenedor-%d", i))
@@ -84,7 +68,7 @@ func handleForm(w http.ResponseWriter, r *http.Request) {
 		p.Contenedores = append(p.Contenedores, c)
 	}
 
-	// convertir la estructura a yaml
+	// converts the struct into yaml
 	y, err := yaml.Marshal(p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -102,7 +86,6 @@ func handleForm(w http.ResponseWriter, r *http.Request) {
 func getConfig(w http.ResponseWriter, r *http.Request) {
 	// get the name of the YAML file from the query string parameter "file"
 	fileName := r.URL.Query().Get("file")
-	fmt.Printf("intendando getConfig")
 	// read the YAML file into a byte slice
 	data, err := ioutil.ReadFile("/home/usuario/.labsoncontainers/recent_configs/" + fileName)
 	if err != nil {
@@ -188,7 +171,7 @@ func main() {
 	http.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
 		file := r.URL.Query().Get("env")
 		if createLabEnvironment("/home/usuario/.labsoncontainers/recent_configs/" + file) {
-			w.WriteHeader(http.StatusOK)
+			http.Redirect(w, r, "http://localhost:8080/practica?env="+strings.TrimSuffix(file, ".yaml"), http.StatusOK)
 			fmt.Fprintf(w, "El entorno del laboratorio ha sido creado exitosamente.")
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -198,7 +181,7 @@ func main() {
 	http.HandleFunc("/execute", func(w http.ResponseWriter, r *http.Request) {
 		env := r.URL.Query().Get("env")
 		if startLabEnvironment(env) {
-			w.WriteHeader(http.StatusOK)
+			http.Redirect(w, r, "http://localhost:8080/practica?env="+env, http.StatusOK)
 			fmt.Fprintf(w, "El laboratorio se ha ejecutado correctamente.")
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -208,6 +191,7 @@ func main() {
 	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
 		env := r.URL.Query().Get("env")
 		stopLabEnvironment(env)
+		http.Redirect(w, r, "http://localhost:8080/"+env, http.StatusOK)
 	})
 
 	http.HandleFunc("/inspect", func(w http.ResponseWriter, r *http.Request) {
@@ -219,6 +203,7 @@ func main() {
 	http.HandleFunc("/destroy", func(w http.ResponseWriter, r *http.Request) {
 		env := r.URL.Query().Get("env")
 		destroyLabEnvironment(env)
+		http.Redirect(w, r, "http://localhost:8080/"+env, http.StatusOK)
 	})
 
 	http.HandleFunc("/reset", func(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +212,7 @@ func main() {
 
 		destroyLabEnvironment(env)
 		if createLabEnvironment("/home/usuario/.labsoncontainers/recent_configs/" + file) {
-			w.WriteHeader(http.StatusOK)
+			http.Redirect(w, r, "http://localhost:8080/practica?env="+env, http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -278,42 +263,6 @@ func main() {
 		})
 
 	})
-	log.Println("Listening on :8080...")
+	fmt.Println("Listening on :8080...")
 	http.ListenAndServe(":8080", nil)
-	/*
-		flag.CommandLine.Usage = Usage
-
-		create := flag.Bool("c", false, "Crea el entorno de contenedores a partir del fichero YAML proporcionado (se destruyen los contenedores asociados al entorno del fichero)")
-		start := flag.Bool("l", false, "Ejecuta todos los contenedores asociados al entorno proporcionado")
-		inspect := flag.Bool("i", false, "Muestra la información de todos los contenedores asociados al entorno proporcionado")
-		stop := flag.Bool("p", false, "Detiene todos los contenedores asociados al entorno proporcionado")
-		destroy := flag.Bool("r", false, "Destruye todos los contenedores asociados al entorno proporcionado")
-
-		flag.Parse()
-
-		if flag.NFlag() < 1 {
-			exitOnError("Debe proporcionar una opción válida")
-		} else if flag.NFlag() > 1 {
-			exitOnError("Debe proporcionar una sola opción")
-		} else if flag.NArg() < 1 {
-			exitOnError("Debe proporcionar un nombre de archivo o un nombre de entorno")
-		} else if flag.NArg() > 1 {
-			exitOnError("Debe proporcionar un solo nombre de archivo o nombre de entorno")
-		}
-
-		if *create {
-			createLabEnvironment(flag.Arg(0))
-		} else if *start {
-			startLabEnvironment(flag.Arg(0))
-		} else if *inspect {
-			inspectLabEnvironment(flag.Arg(0))
-		} else if *stop {
-			stopLabEnvironment(flag.Arg(0))
-		} else if *destroy {
-			destroyLabEnvironment(flag.Arg(0))
-		} else {
-			fmt.Fprintln(flag.CommandLine.Output(), "Opción no implementada")
-			os.Exit(1)
-		}
-	*/
 }

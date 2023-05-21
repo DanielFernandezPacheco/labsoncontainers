@@ -22,6 +22,7 @@ function MostrarContenedor(row, container) {
     hostElement.style.marginRight = '10px';
     hostElement.style.textAlign = 'center';
     hostElement.style.cursor = 'pointer';
+    hostElement.style.overflowWrap = "break-word";
     hostElement.classList.add('alert', 'alert-success');
     hostElement.innerHTML = `<div><strong>${container.Name.replace(env + "_", '')}</strong><br>${container.Image} </div><div></div>`;
     hostElement.id = container.ID;

@@ -45,7 +45,7 @@ func handleForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing form values", http.StatusBadRequest)
 		return
 	}
-	nombrePractica := r.FormValue("nombre-practica")
+	nombrePractica := html.EscapeString(r.FormValue("nombre-practica"))
 	numContenedores, _ := strconv.Atoi(r.FormValue("num-contenedores"))
 
 	var p Practica
@@ -54,14 +54,14 @@ func handleForm(w http.ResponseWriter, r *http.Request) {
 	// iterates over the containers and networks to add them to the structure
 	for i := 0; i < numContenedores; i++ {
 		var c Contenedor
-		c.Nombre = r.FormValue(fmt.Sprintf("nombre-contenedor-%d", i))
-		c.Imagen = r.FormValue(fmt.Sprintf("nombre-imagen-%d", i))
+		c.Nombre = html.EscapeString(r.FormValue(fmt.Sprintf("nombre-contenedor-%d", i)))
+		c.Imagen = html.EscapeString(r.FormValue(fmt.Sprintf("nombre-imagen-%d", i)))
 
 		numRedes, _ := strconv.Atoi(r.FormValue(fmt.Sprintf("num-redes-%d", i)))
 		for j := 0; j < numRedes; j++ {
 			var red Red
-			red.Nombre, _ = strconv.Atoi(r.FormValue(fmt.Sprintf("nombre-red-%d-%d", i, j)))
-			red.IP = r.FormValue(fmt.Sprintf("ip-red-%d-%d", i, j))
+			red.Nombre, _ = html.EscapeString(strconv.Atoi(r.FormValue(fmt.Sprintf("nombre-red-%d-%d", i, j))))
+			red.IP = html.EscapeString(r.FormValue(fmt.Sprintf("ip-red-%d-%d", i, j)))
 			c.Redes = append(c.Redes, red)
 		}
 

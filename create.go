@@ -285,8 +285,10 @@ func createContainer(errGroupCtx context.Context, labContainer *LabContainer, la
 		Image: imageName,
 	}, &container.HostConfig{
 		Init: boolPointer(true),
+		Privileged: true,
 		CapAdd: []string{
 			"NET_ADMIN",
+			"SYS_ADMIN",
 		},
 		Mounts: []mount.Mount{
 			{

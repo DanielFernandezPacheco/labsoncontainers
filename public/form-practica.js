@@ -12,7 +12,7 @@ function actualizarTexto() {
 
     if (file) {
         var inputNombre = document.getElementById("nombre-practica");
-        inputNombre.value = file;
+        inputNombre.value = file.replace(/\.yaml$/, "");
         inputNombre.readOnly = true;
         fillForm();
     }
@@ -43,7 +43,7 @@ function fillForm() {
 
 
 function actualizarNombrePractica() {
-    document.querySelector("#main-card-title").innerHTML = document.getElementById("nombre-practica").value;
+    document.querySelector("#main-card-title").textContent = document.getElementById("nombre-practica").value;
 }
 
 
@@ -57,8 +57,8 @@ function nuevaRed(indiceContenedor) {
                 <span class="input-group-text">Red</span>
             </div>
             <input required type="number" style="max-width:125px"
-                class="form-control" placeholder="Nº de red" id="nombre-${newNetwork.id}" name="nombre-${newNetwork.id}">
-            <input type="text" class="form-control" placeholder="IP (opcional)" id="ip-${newNetwork.id}" name="ip-${newNetwork.id}">
+                class="form-control" placeholder="Nº de red" id="nombre-${newNetwork.id}" name="nombre-${newNetwork.id}" max="10">
+            <input type="text" class="form-control" placeholder="IP (opcional)" id="ip-${newNetwork.id}" name="ip-${newNetwork.id}"  maxlength="20">
 
             <div class="input-group-append">
                 <button class="btn btn-outline-danger" type="button"
@@ -116,18 +116,18 @@ function nuevoContenedor() {
             <div class ="row">
                 <div class='form-group col-6'>
                     <label for='nombre-contenedor-${contador}'>Nombre del contenedor:</label>
-                    <input required class='form-control' type='text' id='nombre-contenedor-${contador}' name='nombre-contenedor-${contador}' onchange="actualizarNombreContenedor(${contador})">
+                    <input required class='form-control' type='text' id='nombre-contenedor-${contador}' name='nombre-contenedor-${contador}' onchange="actualizarNombreContenedor(${contador})"  maxlength="20">
                 </div>
                 <div class='form-group col-6'>
                     <label for='nombre-imagen-${contador}'>Nombre de la imagen:</label>
-                    <input required class='form-control' type='text' id='nombre-imagen-${contador}' name='nombre-imagen-${contador}'>
+                    <input required class='form-control' type='text' id='nombre-imagen-${contador}' name='nombre-imagen-${contador}'  maxlength="30">
                 </div>
             </div>
             <div class='form-group'>
                 <button type="button" class="btn btn-dark btn-block" onclick="nuevaRed(${contador})">Añadir red</button>
             </div>
             
-            <input id="num-redes-${contador}" name="num-redes-${contador}" type="hidden" value="0">
+            <input id="num-redes-${contador}" name="num-redes-${contador}" type="hidden" value="0" max="10">
             <div id='campos-redes-${contador}'></div>
         </div>
         </div>`
@@ -140,7 +140,7 @@ function nuevoContenedor() {
 
 
 function actualizarNombreContenedor(indiceContenedor) {
-    document.querySelector("button[data-target='#collapse-" + indiceContenedor + "']").innerHTML = document.getElementById("nombre-contenedor-" + indiceContenedor).value;
+    document.querySelector("button[data-target='#collapse-" + indiceContenedor + "']").textContent = document.getElementById("nombre-contenedor-" + indiceContenedor).value;
 }
 
 
